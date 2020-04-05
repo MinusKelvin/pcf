@@ -39,6 +39,19 @@ fn benchmark(c: &mut Criterion) {
             ), black_box(BitBoard(0b1111110000_1111110000_1111110000_1111110000)), 4
         )
     ));
+    c.bench_function("ISZL 100% com", |b| b.iter(||
+        pc_finder::combination::find_combinations(
+            black_box(PieceSet::default()
+                .with(I)
+                .with(L)
+                .with(J).with(J)
+                .with(O).with(O)
+                .with(S)
+                .with(Z)
+                .with(T).with(T)
+            ), black_box(BitBoard(0b0000001111_0000000111_0000011111_0000001111)), 4
+        )
+    ));
 }
 
 criterion_group! {
