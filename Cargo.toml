@@ -10,6 +10,7 @@ edition = "2018"
 
 [dev-dependencies]
 criterion = "0.3"
+fumen = { git = "https://github.com/MinusKelvin/fumen-rs" }
 
 [[bench]]
 name = "combination"
