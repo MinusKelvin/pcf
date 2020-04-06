@@ -1,4 +1,6 @@
 pub mod combination;
+pub mod placeability;
+pub mod solve;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum Piece {
@@ -92,105 +94,6 @@ impl std::iter::FromIterator<Piece> for PieceSet {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq)]
-pub struct PieceSequence {
-    seq: [Piece; 11],
-    count: u8
-}
-
-impl PieceSequence {
-    /// For empty hold sequences, interpret this as (next, hold).
-    /// For nonempty hold sequences, interpret this as (hold, next).
-    pub fn peek_next(&self) -> (Piece, Piece) {
-        if self.count < 2 {
-            panic!("Not enough pieces in the sequence to know what can be placed next");
-        }
-        (self.seq[self.count as usize - 1], self.seq[self.count as usize - 2])
-    }
-
-    pub fn remove_first(&mut self) {
-        self.count -= 1;
-    }
-
-    pub fn remove_second(&mut self) {
-        self.seq[self.count as usize - 2] = self.seq[self.count as usize - 1];
-        self.count -= 1;
-    }
-
-    pub fn to_set(&self) -> PieceSet {
-        let mut set = PieceSet::default();
-        for i in 0..self.count {
-            set = set.with(self.seq[i as usize]);
-        }
-        set
-    }
-
-    pub fn to_index(&self) -> usize {
-        let mut index = 0;
-        for i in 0..self.count as usize {
-            index *= 7;
-            index += self.seq[i] as usize;
-        }
-        index
-    }
-
-    pub fn len(&self) -> usize {
-        self.count as usize
-    }
-}
-
-impl std::iter::Iterator for PieceSequence {
-    type Item = Piece;
-
-    fn next(&mut self) -> Option<Piece> {
-        if self.count == 0 {
-            None
-        } else {
-            self.count -= 1;
-            Some(self.seq[self.count as usize])
-        }
-    }
-}
-
-impl std::iter::FromIterator<Piece> for PieceSequence {
-    fn from_iter<T: IntoIterator<Item=Piece>>(iter: T) -> Self {
-        let mut seq = [Piece::S; 11];
-        let mut count = 0;
-        for p in iter.into_iter().take(11) {
-            seq[count as usize] = p;
-            count += 1;
-        }
-        seq.rotate_right(11 - count as usize);
-        seq.reverse();
-        PieceSequence {
-            seq, count
-        }
-    }
-}
-
-impl std::cmp::PartialEq for PieceSequence {
-    fn eq(&self, other: &Self) -> bool {
-        if self.count != other.count {
-            return false
-        }
-        for i in 0..self.count as usize {
-            if self.seq[i] != other.seq[i] {
-                return false
-            }
-        }
-        true
-    }
-}
-
-impl std::hash::Hash for PieceSequence {
-    fn hash<H: std::hash::Hasher>(&self, h: &mut H) {
-        h.write_u8(self.count);
-        for i in 0..self.count as usize {
-            self.seq[i].hash(h);
-        }
-    }
-}
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default)]
 pub struct BitBoard(pub u64);
 
@@ -239,7 +142,20 @@ impl Placement {
     }
 
     fn placeable(self, on: BitBoard) -> bool {
-        self.kind.grounded() || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
+        let mut hurdled_lines = 0;
+        for i in (1..5).rev() {
+            hurdled_lines <<= 10;
+            if self.kind.hurdles() & 1 << i != 0 {
+                hurdled_lines |= (1 << 10) - 1;
+            }
+        }
+        // shift by 10 since the above loop skips the bottom row since it can't be hurdled
+        if BitBoard(hurdled_lines << 10).remove(on) != BitBoard(0) {
+            // hurdled lines not filled means the hurdled placement is impossible
+            false
+        } else {
+            self.kind.grounded() || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
+        }
     }
 
     fn harddrop_mask(self) -> BitBoard {

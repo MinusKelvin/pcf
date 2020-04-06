@@ -43,19 +43,6 @@ fn find_combos(
                     continue
                 }
 
-                let mut hurdled_lines = 0;
-                for i in (1..5).rev() {
-                    hurdled_lines <<= 10;
-                    if p.kind.hurdles() & 1 << i != 0 {
-                        hurdled_lines |= (1 << 10) - 1;
-                    }
-                }
-                // shift by 10 since the above loop skips the bottom row since it can't be hurdled
-                if BitBoard(hurdled_lines << 10).remove(supported) != BitBoard(0) {
-                    // hurdled lines not filled means hurdled placement not supported
-                    continue
-                }
-
                 if p.placeable(supported) {
                     // supported placement
                     supported = supported.combine(piece_board);
@@ -87,7 +74,7 @@ fn find_combos(
         }
         let y = y;
 
-        for &piece_state in crate::data::PIECE_STATES_FOR_HEIGHT[height] {
+        for &piece_state in crate::data::PIECE_STATES_FOR_HEIGHT[height-1] {
             if !piece_set.contains(piece_state.piece()) {
                 // this piece can't be used again
                 continue

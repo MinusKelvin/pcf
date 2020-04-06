@@ -11,7 +11,12 @@ edition = "2018"
 [dev-dependencies]
 criterion = "0.3"
 fumen = { git = "https://github.com/MinusKelvin/fumen-rs" }
+rand = "0.7"
 
 [[bench]]
 name = "combination"
+harness = false
+
+[[bench]]
+name = "permutation"
 harness = false

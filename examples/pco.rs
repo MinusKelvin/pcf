@@ -1,5 +1,6 @@
 use fumen::{ Fumen, CellColor };
-use pc_finder::{ BitBoard, PieceSet, Piece, combination::find_combinations };
+use pc_finder::{ BitBoard, PieceSet, Piece, combination::find_combinations, solve::solve_pc };
+use rand::prelude::*;
 
 mod common;
 
@@ -18,4 +19,21 @@ fn main() {
     }
 
     println!("Combinatorial PCO Solutions: http://fumen.zui.jp/?{}", fumen.encode());
+
+    let mut queue = vec![
+        Piece::I, Piece::T, Piece::O, Piece::S, Piece::Z, Piece::L, Piece::J
+    ];
+    queue.shuffle(&mut thread_rng());
+
+    let mut fumen = Fumen::default();
+    common::blit(&mut fumen.pages[0], board, CellColor::Grey);
+    for soln in solve_pc(&queue, board, true, true, pc_finder::placeability::always) {
+        let mut page = fumen.pages[0].clone();
+        common::draw_placements(&mut page, &soln);
+        fumen.pages.push(page);
+    }
+
+    println!(
+        "PCO Solutions for sequence {:?}: http://fumen.zui.jp/?{}", &queue[..4], fumen.encode()
+    );
 }
