@@ -227,5 +227,25 @@ impl BitBoard {
     }
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub struct Placement {
+    pub kind: PieceState,
+    pub x: u8
+}
+
+impl Placement {
+    pub fn board(self) -> BitBoard {
+        BitBoard(self.kind.board().0 << self.x)
+    }
+
+    fn placeable(self, on: BitBoard) -> bool {
+        self.kind.grounded() || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
+    }
+
+    fn harddrop_mask(self) -> BitBoard {
+        BitBoard(self.kind.harddrop_mask().0 << self.x)
+    }
+}
+
 use data::PieceState;
 include!(concat!(env!("OUT_DIR"), "/data.rs"));

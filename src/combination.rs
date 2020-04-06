@@ -1,25 +1,5 @@
 use crate::*;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub struct Placement {
-    pub kind: PieceState,
-    pub x: u8
-}
-
-impl Placement {
-    pub fn board(self) -> BitBoard {
-        BitBoard(self.kind.board().0 << self.x)
-    }
-
-    pub fn placeable(self, on: BitBoard) -> bool {
-        self.kind.grounded() || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
-    }
-
-    pub fn harddrop_mask(self) -> BitBoard {
-        BitBoard(self.kind.harddrop_mask().0 << self.x)
-    }
-}
-
 pub fn find_combinations(
     piece_set: PieceSet, field: BitBoard, height: usize
 ) -> Vec<Vec<Placement>> {
