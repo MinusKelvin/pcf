@@ -56,7 +56,7 @@ fn benchmark(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().measurement_time(std::time::Duration::from_secs(60));
+    config = Criterion::default().measurement_time(std::time::Duration::from_secs(20));
     targets = benchmark
 }
 criterion_main!(benches);
