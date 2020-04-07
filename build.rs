@@ -84,30 +84,37 @@ fn main() -> std::io::Result<()> {
 
     writeln!(file, "{}", stringify! {
         impl PieceState {
+            #[inline]
             pub fn board(self) -> crate::BitBoard {
                 BitBoard(PIECE_BITS[self as usize])
             }
 
+            #[inline]
             pub fn width(self) -> u8 {
                 PIECE_WIDTHS[self as usize]
             }
 
+            #[inline]
             pub fn hurdles(self) -> u8 {
                 PIECE_HURDLES[self as usize]
             }
 
+            #[inline]
             pub fn below_mask(self) -> BitBoard {
                 BitBoard(PIECE_BELOW[self as usize])
             }
 
+            #[inline]
             pub fn harddrop_mask(self) -> BitBoard {
                 BitBoard(PIECE_HARDDROP[self as usize])
             }
 
+            #[inline]
             pub fn grounded(self) -> bool {
                 PIECE_GROUNDED[self as usize]
             }
 
+            #[inline]
             pub fn piece(self) -> Piece {
                 PIECE_KINDS[self as usize]
             }

@@ -30,15 +30,18 @@ pub const PIECES: [Piece; 7] = [
 pub struct PieceSet(pub [u8; 7]);
 
 impl PieceSet {
+    #[inline]
     pub fn without(mut self, p: Piece) -> PieceSet {
         self.0[p as usize] -= 1;
         self
     }
 
+    #[inline]
     pub fn contains(self, p: Piece) -> bool {
         self.0[p as usize] != 0
     }
 
+    #[inline]
     pub fn with(mut self, p: Piece) -> PieceSet {
         self.0[p as usize] += 1;
         self
@@ -101,22 +104,27 @@ impl std::iter::FromIterator<Piece> for PieceSet {
 pub struct BitBoard(pub u64);
 
 impl BitBoard {
+    #[inline]
     pub fn filled(height: usize) -> BitBoard {
         BitBoard((1 << height*10) - 1)
     }
 
+    #[inline]
     pub fn combine(self, other: Self) -> Self {
         BitBoard(self.0 | other.0)
     }
 
+    #[inline]
     pub fn remove(self, other: Self) -> Self {
         BitBoard(self.0 & !other.0)
     }
 
+    #[inline]
     pub fn overlaps(self, other: Self) -> bool {
         self.0 & other.0 != 0
     }
 
+    #[inline]
     pub fn cell_filled(self, x: usize, y: usize) -> bool {
         self.0 & 1 << x+y*10 != 0
     }
@@ -140,10 +148,12 @@ pub struct Placement {
 }
 
 impl Placement {
+    #[inline]
     pub fn board(self) -> BitBoard {
         BitBoard(self.kind.board().0 << self.x)
     }
 
+    #[inline]
     fn placeable(self, on: BitBoard) -> bool {
         let mut hurdled_lines = 0;
         for i in (1..5).rev() {
@@ -161,6 +171,7 @@ impl Placement {
         }
     }
 
+    #[inline]
     fn harddrop_mask(self) -> BitBoard {
         BitBoard(self.kind.harddrop_mask().0 << self.x)
     }
