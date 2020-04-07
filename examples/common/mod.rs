@@ -1,4 +1,4 @@
-use pc_finder::{ BitBoard, Placement, Piece };
+use pcf::{ BitBoard, Placement, Piece };
 use fumen::{ Page, CellColor };
 
 pub fn draw_placements(page: &mut Page, placements: &[Placement]) {

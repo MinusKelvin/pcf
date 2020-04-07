@@ -1,10 +1,10 @@
 use criterion::{ black_box, criterion_group, criterion_main, Criterion };
-use pc_finder::{ BitBoard, PieceSet };
-use pc_finder::Piece::*;
+use pcf::{ BitBoard, PieceSet };
+use pcf::Piece::*;
 
 fn benchmark(c: &mut Criterion) {
     c.bench_function("2 line com", |b| b.iter(||
-        pc_finder::combination::find_combinations(
+        pcf::combination::find_combinations(
             black_box(PieceSet::default()
                 .with(I).with(I).with(I).with(I).with(I)
                 .with(L).with(L).with(L).with(L).with(L)
@@ -14,7 +14,7 @@ fn benchmark(c: &mut Criterion) {
         )
     ));
     c.bench_function("PCO com", |b| b.iter(||
-        pc_finder::combination::find_combinations(
+        pcf::combination::find_combinations(
             black_box(PieceSet::default()
                 .with(I)
                 .with(L)
@@ -27,7 +27,7 @@ fn benchmark(c: &mut Criterion) {
         )
     ));
     c.bench_function("grace system com", |b| b.iter(||
-        pc_finder::combination::find_combinations(
+        pcf::combination::find_combinations(
             black_box(PieceSet::default()
                 .with(I)
                 .with(L)
@@ -40,7 +40,7 @@ fn benchmark(c: &mut Criterion) {
         )
     ));
     c.bench_function("ISZL 100% com", |b| b.iter(||
-        pc_finder::combination::find_combinations(
+        pcf::combination::find_combinations(
             black_box(PieceSet::default()
                 .with(I)
                 .with(L)

@@ -1,5 +1,5 @@
 use fumen::{ Fumen, CellColor };
-use pc_finder::{ BitBoard, PieceSet, Piece, combination::find_combinations, solve::solve_pc };
+use pcf::{ BitBoard, PieceSet, Piece, combination::find_combinations, solve::solve_pc };
 use rand::prelude::*;
 
 mod common;
@@ -27,7 +27,7 @@ fn main() {
 
     let mut fumen = Fumen::default();
     common::blit(&mut fumen.pages[0], board, CellColor::Grey);
-    for soln in solve_pc(&queue, board, true, true, pc_finder::placeability::always) {
+    for soln in solve_pc(&queue, board, true, true, pcf::placeability::always) {
         let mut page = fumen.pages[0].clone();
         common::draw_placements(&mut page, &soln);
         fumen.pages.push(page);

@@ -1,5 +1,5 @@
 use fumen::{ Fumen, Page };
-use pc_finder::{ BitBoard, Piece, solve::solve_pc, placeability };
+use pcf::{ BitBoard, Piece, solve::solve_pc, placeability };
 use rand::prelude::*;
 
 mod common;
