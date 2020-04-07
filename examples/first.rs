@@ -1,5 +1,5 @@
 use fumen::{ Fumen, Page };
-use pcf::{ BitBoard, Piece, solve::solve_pc, placeability };
+use pcf::{ BitBoard, Piece };
 use rand::prelude::*;
 
 mod common;
@@ -15,7 +15,7 @@ fn main() {
 
     let mut fumen = Fumen::default();
     fumen.pages.pop();
-    for soln in solve_pc(&queue, BitBoard(0), true, true, placeability::hard_drop_only) {
+    for soln in pcf::solve_pc(&queue, BitBoard(0), true, true, pcf::placeability::hard_drop_only) {
         let mut page = Page::default();
         common::draw_placements(&mut page, &soln);
         fumen.pages.push(page);

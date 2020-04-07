@@ -34,13 +34,14 @@ pub fn solve_pc(
         }
         let queue: PieceSequence = queue.iter().copied().take(pieces + hold_allowed as usize).collect();
 
-        for mut combo in crate::combination::find_combinations(queue.to_set(), board, height) {
+        find_combinations(queue.to_set(), board, height, |combo| {
             solve(
                 &mut results,
-                &mut vec![], queue, board, &mut combo,
+                &mut vec![], queue, board, &mut combo.to_vec(),
                 hold_allowed, unique, &mut false, &placability_judge
             );
-        }
+            SearchStatus::Continue
+        });
 
         if !results.is_empty() {
             break
@@ -66,13 +67,14 @@ pub fn solve_pc_at_height(
     let queue: PieceSequence = queue.iter().copied().take(pieces).collect();
 
     let mut results = vec![];
-    for mut combo in crate::combination::find_combinations(queue.to_set(), board, height) {
+    find_combinations(queue.to_set(), board, height, |combo| {
         solve(
             &mut results,
-            &mut vec![], queue, board, &mut combo,
+            &mut vec![], queue, board, &mut combo.to_vec(),
             hold_allowed, unique, &mut false, &placability_judge
         );
-    }
+        SearchStatus::Continue
+    });
     results
 }
 

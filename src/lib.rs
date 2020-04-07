@@ -1,6 +1,9 @@
-pub mod combination;
+mod combination;
 pub mod placeability;
-pub mod solve;
+mod solve;
+
+pub use combination::*;
+pub use solve::*;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum Piece {

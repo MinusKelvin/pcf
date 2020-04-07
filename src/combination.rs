@@ -1,28 +1,27 @@
 use crate::*;
 
 pub fn find_combinations(
-    piece_set: PieceSet, field: BitBoard, height: usize
-) -> Vec<Vec<Placement>> {
-    let mut combinations = vec![];
+    piece_set: PieceSet, field: BitBoard, height: usize,
+    mut combo_consumer: impl FnMut(&[Placement]) -> SearchStatus
+) {
     find_combos(
-        &mut combinations,
         &mut vec![],
         field,
         BitBoard::filled(height),
         piece_set,
-        height
+        height,
+        &mut combo_consumer
     );
-    combinations
 }
 
 fn find_combos(
-    combos: &mut Vec<Vec<Placement>>,
     placements: &mut Vec<Placement>,
     board: BitBoard,
     inverse_placed: BitBoard,
     piece_set: PieceSet,
-    height: usize
-) {
+    height: usize,
+    combo_consumer: &mut impl FnMut(&[Placement]) -> SearchStatus
+) -> Option<()> {
     // Check that no cyclic placement dependency exists. e.g. An S hurdles row 1, and an O hurdles
     // row 2. To place the O, the S must be used to clear a line first. To place the S, the O must
     // be used to clear a line first. Obviously, these dependencies cannot be satisfied.
@@ -57,12 +56,16 @@ fn find_combos(
         // any holes in the supported field, then we know that there are some placements that
         // have a cyclic dependency and therefore this combination can't ever be placed.
         if supported != BitBoard::filled(height) {
-            return;
+            return Some(());
         }
     }
 
     if board == BitBoard::filled(height) {
-        combos.push(placements.clone());
+        // I would like to just overload the ? operator for SearchStatus, but try_trait is unstable
+        match combo_consumer(placements) {
+            SearchStatus::Continue => Some(()),
+            SearchStatus::Abort => None
+        }
     } else {
         let x = board.leftmost_empty_column(height);
         let mut y = 0;
@@ -104,14 +107,22 @@ fn find_combos(
 
             placements.push(placement);
             find_combos(
-                combos,
                 placements,
                 new_board,
                 new_inverse_placed,
                 piece_set.without(piece_state.piece()),
-                height
-            );
+                height,
+                combo_consumer
+            )?;
             placements.pop();
         }
+
+        Some(())
     }
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum SearchStatus {
+    Continue,
+    Abort
 }
