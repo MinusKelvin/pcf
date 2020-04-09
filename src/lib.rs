@@ -177,5 +177,11 @@ impl Placement {
     }
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum SearchStatus {
+    Continue,
+    Abort
+}
+
 use data::PieceState;
 include!(concat!(env!("OUT_DIR"), "/data.rs"));

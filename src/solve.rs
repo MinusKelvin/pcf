@@ -5,8 +5,9 @@ pub fn solve_pc(
     board: BitBoard,
     hold_allowed: bool,
     unique: bool,
-    placability_judge: impl Fn(BitBoard, Placement) -> bool
-) -> Vec<Vec<Placement>> {
+    placeability_judge: impl Fn(BitBoard, Placement) -> bool,
+    mut pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
+) {
     let mut lowest_height = 0;
     for y in 0..6 {
         if board.0 >> y*10 & (1 << 10) - 1 != 0 {
@@ -16,7 +17,7 @@ pub fn solve_pc(
     let unfilled = 10*lowest_height - board.0.count_ones() as usize;
     if unfilled % 2 != 0 {
         // can never fill an odd number of cells
-        return vec![];
+        return;
     } else if unfilled % 4 != 0 {
         // need to fill an extra line to get a PC
         lowest_height += 1;
@@ -25,7 +26,6 @@ pub fn solve_pc(
         lowest_height = 2;
     }
 
-    let mut results = vec![];
     for height in (lowest_height..=6).step_by(2) {
         let unfilled = 10*height - board.0.count_ones() as usize;
         let pieces = unfilled / 4;
@@ -34,20 +34,22 @@ pub fn solve_pc(
         }
         let queue: PieceSequence = queue.iter().copied().take(pieces + hold_allowed as usize).collect();
 
+        let mut found = false;
         find_combinations(queue.to_set(), board, height, |combo| {
-            solve(
-                &mut results,
-                &mut vec![], queue, board, &mut combo.to_vec(),
-                hold_allowed, unique, &mut false, &placability_judge
-            );
-            SearchStatus::Continue
+            solve_placement_combo(
+                queue, board, combo,
+                hold_allowed, unique, &placeability_judge,
+                |soln| {
+                    found = true;
+                    pc_consumer(soln)
+                }
+            )
         });
 
-        if !results.is_empty() {
+        if found {
             break
         }
     }
-    results
 }
 
 pub fn solve_pc_at_height(
@@ -56,26 +58,23 @@ pub fn solve_pc_at_height(
     hold_allowed: bool,
     unique: bool,
     height: usize,
-    placability_judge: impl Fn(BitBoard, Placement) -> bool
-) -> Vec<Vec<Placement>> {
+    placeability_judge: impl Fn(BitBoard, Placement) -> bool,
+    mut pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
+) {
     let unfilled = 10*height - board.0.count_ones() as usize;
     if unfilled % 4 != 0 {
         // can only fill a multiple of 4 empty cells with tetrominos
-        return vec![];
+        return;
     }
     let pieces = unfilled / 4 + hold_allowed as usize;
     let queue: PieceSequence = queue.iter().copied().take(pieces).collect();
 
-    let mut results = vec![];
     find_combinations(queue.to_set(), board, height, |combo| {
-        solve(
-            &mut results,
-            &mut vec![], queue, board, &mut combo.to_vec(),
-            hold_allowed, unique, &mut false, &placability_judge
-        );
-        SearchStatus::Continue
+        solve_placement_combo(
+            queue, board, combo,
+            hold_allowed, unique, &placeability_judge, &mut pc_consumer
+        )
     });
-    results
 }
 
 pub fn solve_placement_combination(
@@ -84,30 +83,45 @@ pub fn solve_placement_combination(
     combination: &[Placement],
     hold_allowed: bool,
     unique: bool,
-    placability_judge: impl Fn(BitBoard, Placement) -> bool
-) -> Vec<Vec<Placement>> {
-    let mut results = vec![];
-    solve(
-        &mut results,
-        &mut vec![], queue.iter().copied().collect(), board, &mut combination.to_vec(),
-        hold_allowed, unique, &mut false, &placability_judge
+    placability_judge: impl Fn(BitBoard, Placement) -> bool,
+    pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
+) {
+    solve_placement_combo(
+        queue.iter().copied().collect(), board, &mut combination.to_vec(),
+        hold_allowed, unique, placability_judge, pc_consumer
     );
-    results
+}
+
+fn solve_placement_combo(
+    queue: PieceSequence,
+    board: BitBoard,
+    combination: &[Placement],
+    hold_allowed: bool,
+    unique: bool,
+    placability_judge: impl Fn(BitBoard, Placement) -> bool,
+    mut pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
+) -> SearchStatus {
+    solve(
+        &mut vec![], queue, board, &mut combination.to_vec(),
+        hold_allowed, unique, &placability_judge, &mut pc_consumer
+    ).err().unwrap_or(SearchStatus::Continue)
 }
 
 fn solve(
-    results: &mut Vec<Vec<Placement>>,
     permutation: &mut Vec<Placement>,
     queue: PieceSequence,
     board: BitBoard,
     remaining: &mut Vec<Placement>,
     hold_allowed: bool,
-    unique: bool, found: &mut bool,
-    placability_judge: &impl Fn(BitBoard, Placement) -> bool
-) {
+    unique: bool,
+    placability_judge: &impl Fn(BitBoard, Placement) -> bool,
+    pc_consumer: &mut impl FnMut(&[Placement]) -> SearchStatus
+) -> Result<(), SearchStatus> {
     if remaining.is_empty() {
-        results.push(permutation.clone());
-        if unique { *found = true }
+        match pc_consumer(permutation) {
+            SearchStatus::Continue => if unique { Err(SearchStatus::Continue) } else { Ok(()) },
+            SearchStatus::Abort => Err(SearchStatus::Abort)
+        }
     } else {
         // we have the invariant that the range 0..n remains the same from one iteration to the next
         // we do still have to mutate the remaining vec in ways that the compiler can only view as
@@ -136,19 +150,18 @@ fn solve(
             permutation.push(placement);
 
             solve(
-                results,
                 permutation, new_queue, new_board, remaining,
-                hold_allowed, unique, found, placability_judge
-            );
+                hold_allowed, unique, placability_judge, pc_consumer
+            )?;
 
             permutation.pop();
             remaining.push(placement);
             let last_index = remaining.len() - 1;
             remaining.swap(i, last_index);
             // the above restores the original state of the remaining vec
-
-            if *found { break }
         }
+
+        Ok(())
     }
 }
 

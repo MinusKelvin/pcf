@@ -20,3 +20,7 @@ harness = false
 [[bench]]
 name = "permutation"
 harness = false
+
+[[bench]]
+name = "specific_pc"
+harness = false

@@ -28,11 +28,12 @@ fn main() {
 
     let mut fumen = Fumen::default();
     common::blit(&mut fumen.pages[0], board, CellColor::Grey);
-    for soln in pcf::solve_pc(&queue, board, true, true, pcf::placeability::always) {
+    pcf::solve_pc(&queue, board, true, true, pcf::placeability::always, |soln| {
         let mut page = fumen.pages[0].clone();
         common::draw_placements(&mut page, &soln);
         fumen.pages.push(page);
-    }
+        SearchStatus::Continue
+    });
 
     println!(
         "PCO Solutions for sequence {:?}: http://fumen.zui.jp/?{}", &queue[..4], fumen.encode()

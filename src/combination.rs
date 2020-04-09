@@ -120,9 +120,3 @@ fn find_combos(
         Some(())
     }
 }
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub enum SearchStatus {
-    Continue,
-    Abort
-}
