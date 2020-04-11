@@ -213,5 +213,5 @@ pub struct SrsPiece {
     pub y: i32
 }
 
-use data::PieceState;
+pub use data::PieceState;
 include!(concat!(env!("OUT_DIR"), "/data.rs"));
