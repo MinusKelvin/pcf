@@ -27,11 +27,9 @@ fn main() {
     queue.shuffle(&mut thread_rng());
 
     let mut fumen = Fumen::default();
-    common::blit(&mut fumen.pages[0], board, CellColor::Grey);
+    fumen.pages.pop();
     pcf::solve_pc(&queue, board, true, true, pcf::placeability::always, |soln| {
-        let mut page = fumen.pages[0].clone();
-        common::draw_placements(&mut page, &soln);
-        fumen.pages.push(page);
+        common::add_placement_pages(&mut fumen, board, soln);
         SearchStatus::Continue
     });
 

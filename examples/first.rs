@@ -16,9 +16,7 @@ fn main() {
     let mut fumen = Fumen::default();
     fumen.pages.pop();
     pcf::solve_pc(&queue, BitBoard(0), true, true, pcf::placeability::hard_drop_only, |soln| {
-        let mut page = Page::default();
-        common::draw_placements(&mut page, &soln);
-        fumen.pages.push(page);
+        common::add_placement_pages(&mut fumen, BitBoard(0), soln);
         SearchStatus::Continue
     });
 

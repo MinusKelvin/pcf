@@ -1,3 +1,5 @@
+use arrayvec::ArrayVec;
+
 mod combination;
 pub mod placeability;
 mod solve;
@@ -167,13 +169,28 @@ impl Placement {
             // hurdled lines not filled means the hurdled placement is impossible
             false
         } else {
-            self.kind.grounded() || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
+            self.kind.y()==0 || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
         }
     }
 
     #[inline]
-    fn harddrop_mask(self) -> BitBoard {
+    pub fn harddrop_mask(self) -> BitBoard {
         BitBoard(self.kind.harddrop_mask().0 << self.x)
+    }
+
+    #[inline]
+    pub fn srs_piece(self, board: BitBoard) -> ArrayVec<[SrsPiece; 4]> {
+        let mut below_lines = 0;
+        for i in 0..self.kind.y() {
+            if board.0 >> 10*i & (1<<10)-1 == (1<<10)-1 {
+                below_lines += 1;
+            }
+        }
+        self.kind.piece_srs().iter().map(|&p| SrsPiece {
+            x: self.x as i32 + p.x,
+            y: p.y - below_lines,
+            ..p
+        }).collect()
     }
 }
 
@@ -181,6 +198,19 @@ impl Placement {
 pub enum SearchStatus {
     Continue,
     Abort
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum Rotation {
+    North, East, South, West
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub struct SrsPiece {
+    pub piece: Piece,
+    pub rotation: Rotation,
+    pub x: i32,
+    pub y: i32
 }
 
 use data::PieceState;

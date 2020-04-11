@@ -15,25 +15,82 @@ fn main() -> std::io::Result<()> {
 
     let mut states = vec![];
 
-    gen_piece_data(&mut states, [(0, 0), (1, 0), (1, 1), (2, 1)], "SHorizontal");
-    gen_piece_data(&mut states, [(1, 0), (1, 1), (0, 1), (0, 2)], "SVertical");
-    gen_piece_data(&mut states, [(0, 1), (1, 1), (1, 0), (2, 0)], "ZHorizontal");
-    gen_piece_data(&mut states, [(0, 0), (0, 1), (1, 1), (1, 2)], "ZVertical");
-    gen_piece_data(&mut states, [(0, 0), (1, 0), (2, 0), (3, 0)], "IHorizontal");
-    gen_piece_data(&mut states, [(0, 0), (0, 1), (0, 2), (0, 3)], "IVertical");
-    gen_piece_data(&mut states, [(0, 0), (1, 0), (2, 0), (0, 1)], "JNorth");
-    gen_piece_data(&mut states, [(0, 0), (1, 0), (2, 0), (1, 1)], "TNorth");
-    gen_piece_data(&mut states, [(0, 0), (1, 0), (2, 0), (2, 1)], "LNorth");
-    gen_piece_data(&mut states, [(0, 1), (1, 1), (2, 1), (2, 0)], "JSouth");
-    gen_piece_data(&mut states, [(0, 1), (1, 1), (2, 1), (1, 0)], "TSouth");
-    gen_piece_data(&mut states, [(0, 1), (1, 1), (2, 1), (0, 0)], "LSouth");
-    gen_piece_data(&mut states, [(0, 0), (0, 1), (0, 2), (1, 2)], "JEast");
-    gen_piece_data(&mut states, [(0, 0), (0, 1), (0, 2), (1, 1)], "TEast");
-    gen_piece_data(&mut states, [(0, 0), (0, 1), (0, 2), (1, 0)], "LEast");
-    gen_piece_data(&mut states, [(1, 0), (1, 1), (1, 2), (0, 0)], "JWest");
-    gen_piece_data(&mut states, [(1, 0), (1, 1), (1, 2), (0, 1)], "TWest");
-    gen_piece_data(&mut states, [(1, 0), (1, 1), (1, 2), (0, 2)], "LWest");
-    gen_piece_data(&mut states, [(0, 0), (1, 0), (0, 1), (1, 1)], "O");
+    gen_piece_data(
+        &mut states, [(0, 0), (1, 0), (1, 1), (2, 1)], "SHorizontal",
+        &[("North", 1, 0), ("South", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(1, 0), (1, 1), (0, 1), (0, 2)], "SVertical",
+        &[("West", 1, 1), ("East", 0, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 1), (1, 1), (1, 0), (2, 0)], "ZHorizontal",
+        &[("North", 1, 0), ("South", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (0, 1), (1, 1), (1, 2)], "ZVertical",
+        &[("West", 1, 1), ("East", 0, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (1, 0), (2, 0), (3, 0)], "IHorizontal",
+        &[("North", 1, 0), ("South", 2, 0)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (0, 1), (0, 2), (0, 3)], "IVertical",
+        &[("West", 0, 1), ("East", 0, 2)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (1, 0), (2, 0), (0, 1)], "JNorth",
+        &[("North", 1, 0)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (1, 0), (2, 0), (1, 1)], "TNorth",
+        &[("North", 1, 0)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (1, 0), (2, 0), (2, 1)], "LNorth",
+        &[("North", 1, 0)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 1), (1, 1), (2, 1), (2, 0)], "JSouth",
+        &[("South", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 1), (1, 1), (2, 1), (1, 0)], "TSouth",
+        &[("South", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 1), (1, 1), (2, 1), (0, 0)], "LSouth",
+        &[("South", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (0, 1), (0, 2), (1, 2)], "JEast",
+        &[("East", 0, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (0, 1), (0, 2), (1, 1)], "TEast",
+        &[("East", 0, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (0, 1), (0, 2), (1, 0)], "LEast",
+        &[("East", 0, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(1, 0), (1, 1), (1, 2), (0, 0)], "JWest",
+        &[("West", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(1, 0), (1, 1), (1, 2), (0, 1)], "TWest",
+        &[("West", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(1, 0), (1, 1), (1, 2), (0, 2)], "LWest",
+        &[("West", 1, 1)]
+    );
+    gen_piece_data(
+        &mut states, [(0, 0), (1, 0), (0, 1), (1, 1)], "O",
+        &[("North", 0, 0), ("East", 0, 1), ("South", 1, 1), ("West", 1, 0)]
+    );
 
     let mut piece_state_enum =
         "#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)] pub enum PieceState {".to_owned();
@@ -42,8 +99,13 @@ fn main() -> std::io::Result<()> {
     let mut piece_hurdles = format!("const PIECE_HURDLES: &'static [u8; {}] = &[", states.len());
     let mut piece_below = format!("const PIECE_BELOW: &'static [u64; {}] = &[", states.len());
     let mut piece_harddrop = format!("const PIECE_HARDDROP: &'static [u64; {}] = &[", states.len());
-    let mut piece_grounded = format!("const PIECE_GROUNDED: &'static [bool; {}] = &[", states.len());
+    let mut piece_y = format!(
+        "const PIECE_Y: &'static [u8; {}] = &[", states.len()
+    );
     let mut piece_kinds = format!("const PIECE_KINDS: &'static [Piece; {}] = &[", states.len());
+    let mut piece_srs = format!(
+        "const PIECE_SRS: &'static [&'static [SrsPiece]; {}] = &[", states.len()
+    );
 
     let mut heights = [
         String::new(), String::new(), String::new(),
@@ -61,7 +123,16 @@ fn main() -> std::io::Result<()> {
         piece_hurdles.push_str(&format!("{},", data.hurdles));
         piece_below.push_str(&format!("{},", data.below));
         piece_harddrop.push_str(&format!("{},", data.harddrop));
-        piece_grounded.push_str(&format!("{},", data.grounded));
+        piece_y.push_str(&format!("{},", data.y));
+        piece_srs.push_str("&[");
+        for (rot, x, y) in &data.srs {
+            piece_srs.push_str(&format!("SrsPiece {{
+                piece: Piece::{},
+                rotation: Rotation::{},
+                x: {}, y: {}
+            }},", data.name.chars().next().unwrap(), rot, x, y));
+        }
+        piece_srs.push_str("],");
 
         for i in data.height as usize - 1 .. 6 {
             heights[i].push_str("PieceState::");
@@ -77,9 +148,9 @@ fn main() -> std::io::Result<()> {
     writeln!(file, "];")?;
 
     writeln!(file,
-        "{}}} {}]; {}]; {}]; {}]; {}]; {}]; {}];",
+        "{}}}\n{}];\n{}];\n{}];\n{}];\n{}];\n{}];\n{}];\n{}];",
         piece_state_enum, piece_bits, piece_hurdles, piece_widths, piece_below, piece_harddrop,
-        piece_grounded, piece_kinds
+        piece_y, piece_kinds, piece_srs
     )?;
 
     writeln!(file, "{}", stringify! {
@@ -110,13 +181,18 @@ fn main() -> std::io::Result<()> {
             }
 
             #[inline]
-            pub fn grounded(self) -> bool {
-                PIECE_GROUNDED[self as usize]
+            pub fn y(self) -> u8 {
+                PIECE_Y[self as usize]
             }
 
             #[inline]
             pub fn piece(self) -> Piece {
                 PIECE_KINDS[self as usize]
+            }
+
+            #[inline]
+            pub fn piece_srs(self) -> &'static [SrsPiece] {
+                PIECE_SRS[self as usize]
             }
         }
     })?;
@@ -124,7 +200,12 @@ fn main() -> std::io::Result<()> {
     writeln!(file, "}}")
 }
 
-fn gen_piece_data(data: &mut Vec<PieceData>, cells: [(u32, u32); 4], name: &str) {
+fn gen_piece_data(
+    data: &mut Vec<PieceData>,
+    cells: [(u32, u32); 4],
+    name: &str,
+    rots: &[(&'static str, i32, u32)]
+) {
     let mut h = 0;
     let mut w = 0;
     let mut bits = [0; 4];
@@ -134,11 +215,12 @@ fn gen_piece_data(data: &mut Vec<PieceData>, cells: [(u32, u32); 4], name: &str)
         bits[y as usize] |= 1 << x;
     }
 
-    rec_gen_piece_data(data, bits, w, h, name, &mut vec![]);
+    rec_gen_piece_data(data, bits, w, h, name, &mut vec![], rots);
 }
 
 fn rec_gen_piece_data(
-    data: &mut Vec<PieceData>, bits: [u16; 4], w: u32, h: u32, name: &str, offsets: &mut Vec<u32>
+    data: &mut Vec<PieceData>, bits: [u16; 4], w: u32, h: u32, name: &str, offsets: &mut Vec<u32>,
+    rots: &[(&'static str, i32, u32)]
 ) {
     if offsets.len() as u32 == h {
         let mut name = name.to_owned();
@@ -171,20 +253,21 @@ fn rec_gen_piece_data(
         }
         data.push(PieceData {
             name,
-            grounded: offsets[0] == 0,
+            y: offsets[0],
             hurdles,
             height: row,
             bitboard,
             harddrop: hdrop,
             below,
-            width: w
+            width: w,
+            srs: rots.iter().map(|&(r, x, y)| (r, x, y+offsets[0])).collect()
         });
         return;
     }
     let remaining = 6 - offsets.iter().copied().sum::<u32>() - h;
     for offset in 0..=remaining {
         offsets.push(offset);
-        rec_gen_piece_data(data, bits, w, h, name, offsets);
+        rec_gen_piece_data(data, bits, w, h, name, offsets, rots);
         offsets.pop();
     }
 }
@@ -193,10 +276,11 @@ fn rec_gen_piece_data(
 struct PieceData {
     name: String,
     hurdles: u32,
-    grounded: bool,
+    y: u32,
     width: u32,
     height: u32,
     bitboard: u64,
     below: u64,
-    harddrop: u64
+    harddrop: u64,
+    srs: Vec<(&'static str, i32, u32)>
 }
