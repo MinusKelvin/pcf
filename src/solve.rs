@@ -8,6 +8,28 @@ pub fn solve_pc(
     placeability_judge: impl Fn(BitBoard, Placement) -> bool,
     mut pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
 ) {
+    solve_pc_prep(queue, board, hold_allowed, |queue, height| {
+        let mut found = false;
+        find_combinations(queue.to_set(), board, height, |combo| {
+            solve_placement_combo(
+                queue, board, combo,
+                hold_allowed, unique, &placeability_judge,
+                |soln| {
+                    found = true;
+                    pc_consumer(soln)
+                }
+            )
+        });
+        found
+    });
+}
+
+fn solve_pc_prep(
+    queue: &[Piece],
+    board: BitBoard,
+    hold_allowed: bool,
+    mut do_solve: impl FnMut(PieceSequence, usize) -> bool
+) {
     let mut lowest_height = 0;
     for y in 0..6 {
         if board.0 >> y*10 & (1 << 10) - 1 != 0 {
@@ -32,49 +54,14 @@ pub fn solve_pc(
         if queue.len() < pieces {
             break
         }
-        let queue: PieceSequence = queue.iter().copied().take(pieces + hold_allowed as usize).collect();
+        let queue: PieceSequence = queue.iter().copied()
+            .take(pieces + hold_allowed as usize)
+            .collect();
 
-        let mut found = false;
-        find_combinations(queue.to_set(), board, height, |combo| {
-            solve_placement_combo(
-                queue, board, combo,
-                hold_allowed, unique, &placeability_judge,
-                |soln| {
-                    found = true;
-                    pc_consumer(soln)
-                }
-            )
-        });
-
-        if found {
+        if do_solve(queue, height) {
             break
         }
     }
-}
-
-pub fn solve_pc_at_height(
-    queue: &[Piece],
-    board: BitBoard,
-    hold_allowed: bool,
-    unique: bool,
-    height: usize,
-    placeability_judge: impl Fn(BitBoard, Placement) -> bool,
-    mut pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
-) {
-    let unfilled = 10*height - board.0.count_ones() as usize;
-    if unfilled % 4 != 0 {
-        // can only fill a multiple of 4 empty cells with tetrominos
-        return;
-    }
-    let pieces = unfilled / 4 + hold_allowed as usize;
-    let queue: PieceSequence = queue.iter().copied().take(pieces).collect();
-
-    find_combinations(queue.to_set(), board, height, |combo| {
-        solve_placement_combo(
-            queue, board, combo,
-            hold_allowed, unique, &placeability_judge, &mut pc_consumer
-        )
-    });
 }
 
 pub fn solve_placement_combination(
