@@ -24,6 +24,32 @@ pub fn solve_pc(
     });
 }
 
+pub fn solve_pc_mt(
+    queue: &[Piece],
+    board: BitBoard,
+    hold_allowed: bool,
+    unique: bool,
+    placeability_judge: impl Fn(BitBoard, Placement) -> bool + Sync,
+    pc_consumer: impl FnMut(&[Placement]) -> SearchStatus + Clone + Send
+) {
+    let placeability_judge = &placeability_judge;
+    solve_pc_prep(queue, board, hold_allowed, |queue, height| {
+        let found = &std::sync::atomic::AtomicBool::new(false);
+        let mut pc_consumer = pc_consumer.clone();
+        find_combinations_mt(queue.to_set(), board, height, move |combo| {
+            solve_placement_combo(
+                queue, board, combo,
+                hold_allowed, unique, placeability_judge,
+                |soln| {
+                    found.store(true, std::sync::atomic::Ordering::Release);
+                    pc_consumer(soln)
+                }
+            )
+        });
+        found.load(std::sync::atomic::Ordering::Acquire)
+    });
+}
+
 fn solve_pc_prep(
     queue: &[Piece],
     board: BitBoard,
