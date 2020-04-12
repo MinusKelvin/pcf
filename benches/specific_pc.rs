@@ -53,6 +53,27 @@ fn benchmark(c: &mut Criterion) {
             |_| SearchStatus::Continue
         )
     ));
+    c.bench_function("solve combo tucks", |b| b.iter(||
+        pcf::solve_placement_combination(
+            black_box(&[J, L, O, I, T, S, Z, J, L, I, O]),
+            black_box(BitBoard(0)),
+            &[
+                Placement { kind: PieceState::IVertical0000, x: 0 },
+                Placement { kind: PieceState::O00, x: 1 },
+                Placement { kind: PieceState::O20, x: 1 },
+                Placement { kind: PieceState::TEast000, x: 3 },
+                Placement { kind: PieceState::LWest010, x: 3 },
+                Placement { kind: PieceState::JNorth00, x: 5 },
+                Placement { kind: PieceState::SVertical100, x: 5 },
+                Placement { kind: PieceState::IHorizontal3, x: 6 },
+                Placement { kind: PieceState::ZHorizontal00, x: 7 },
+                Placement { kind: PieceState::JSouth10, x: 7 },
+            ],
+            true, false,
+            pcf::placeability::tucks,
+            |_| SearchStatus::Continue
+        )
+    ));
 }
 
 criterion_group! {

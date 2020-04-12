@@ -15,13 +15,13 @@ fn main() {
 
     let mut fumen = Fumen::default();
     fumen.pages.pop();
-    pcf::solve_pc(&queue, BitBoard(0), true, true, pcf::placeability::hard_drop_only, |soln| {
+    pcf::solve_pc(&queue, BitBoard(0), true, true, pcf::placeability::tucks, |soln| {
         common::add_placement_pages(&mut fumen, BitBoard(0), soln);
         SearchStatus::Continue
     });
 
     use std::io::Write;
     writeln!(std::fs::File::create("solutions.txt").unwrap(), "{}", fumen.encode()).unwrap();
-    println!("{} Hard-drop-only solutions have been saved to solutions.txt", fumen.pages.len());
+    println!("{} Tuck solutions have been saved to solutions.txt", fumen.pages.len());
     println!("(these fumens can be so large that you can't view it by clicking a URL)");
 }
