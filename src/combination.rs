@@ -1,16 +1,27 @@
 use crate::*;
 
 pub fn find_combinations(
-    piece_set: PieceSet, field: BitBoard, height: usize,
+    piece_set: PieceSet, board: BitBoard, height: usize,
     mut combo_consumer: impl FnMut(&[Placement]) -> SearchStatus
 ) {
     find_combos_st(
         &mut vec![],
-        field,
+        board,
         BitBoard::filled(height),
         piece_set,
         height,
         &mut combo_consumer
+    );
+}
+
+pub fn find_combinations_mt(
+    piece_set: PieceSet, board: BitBoard, height: usize,
+    combo_consumer: impl FnMut(&[Placement]) -> SearchStatus + Clone + Send
+) {
+    rayon::scope(|scope|
+        find_combos_mt(
+            scope, vec![], board, BitBoard::filled(height), piece_set, height, 0, combo_consumer
+        )
     );
 }
 
@@ -42,6 +53,38 @@ fn find_combos_st(
             result
         }
     )
+}
+
+fn find_combos_mt<'s>(
+    scope: &rayon::Scope<'s>,
+    mut placements: Vec<Placement>,
+    board: BitBoard,
+    inverse_placed: BitBoard,
+    piece_set: PieceSet,
+    height: usize, recursions: usize,
+    mut combo_consumer: impl FnMut(&[Placement]) -> SearchStatus + Clone + Send + 's
+) {
+    if recursions >= 3 {
+        find_combos_st(
+            &mut placements, board, inverse_placed, piece_set, height, &mut combo_consumer
+        );
+    } else {
+        find_combos(
+            board, inverse_placed, piece_set, height,
+            |placement, board, inverse_placed, piece_set| {
+                placements.push(placement);
+                if !has_cyclic_dependency(inverse_placed, &placements, height) {
+                    let p = placements.clone();
+                    let c = combo_consumer.clone();
+                    scope.spawn(move |scope| find_combos_mt(
+                        scope, p, board, inverse_placed, piece_set, height, recursions+1, c
+                    ));
+                }
+                placements.pop();
+                Some(())
+            }
+        );
+    }
 }
 
 #[inline(always)]
