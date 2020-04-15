@@ -34,3 +34,87 @@ pub fn tucks(board: BitBoard, placement: Placement) -> bool {
     }
     return false;
 }
+
+pub fn simple_srs_spins(board: BitBoard, placement: Placement) -> bool {
+    if tucks(board, placement) {
+        return true;
+    }
+
+    let piece = placement.srs_piece(board).into_iter().next().unwrap();
+    let board = board.lines_cleared();
+    let x = placement.x as usize;
+    let y = piece.y as usize;
+
+    let check_empty = |mask: u64| board.0 & mask << 10*y + x == 0;
+
+    // this is a visible description of all the spins we're detecting:
+    // http://fumen.zui.jp/?v115@pgxhHexhIewhReA8cevEn9gwhIexhlenpfpgQaAewh?GeQaAewhGeRawhGeRaAeA8FeAAceflf+gwhIexhkenpuEBU?9UTASIB5DjB98AQWrrDTG98AXO98AwyjXEroo2AseirDFbE?cEoe0TAyE88AQzgeEFbMwDv3STASorJEvwh1DIhRaAAGeA8?beaquAAIhxhkeyufIhRaGeA8AAAeA8ZeaqfIhxhkeyuf+gR?aHeQ4QaGeAABeAAZealf+gxhIewhkeipf+gRaGeA8AAQaA8?jealf+gxhIewhkeipf/gQaHewhQakeelf/gwhIewhkempfH?hAAAeQaAAFeA8BeA8ZedqfJhwhIewhae1ufIhQaJeQaaetp?fIhwhIewhbeVvfIhQaHeAAQaAeAAZetpfIhwhlelpfIhQaJ?ewhae9pfpgwhAeQaGewhAeQaGewhAeQaGewhAeQaIeQaae9?pfIhwhlelpfIhQaHewhcetpf
+    // the cyan blocks are the areas check_empty calls check, the gray blocks are blocks
+    // that we check to make sure are filled
+    match (piece.piece, piece.rotation) {
+        (Piece::S, Rotation::North) => (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000000_0000000000)
+        ) || (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000000_0000000000) &&
+            (placement.x == 7 || board.cell_filled(x+3, y+2))
+        ),
+        (Piece::Z, Rotation::North) => (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000000_0000000000)
+        ) || (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000000_0000000000) &&
+            (placement.x == 0 || board.cell_filled(x-1, y+2))
+        ),
+        (Piece::L, Rotation::North) => (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000000_0000000000) && (
+                board.cell_filled(x+1, y+1) ||
+                board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
+            )
+        ),
+        (Piece::J, Rotation::North) => (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000000_0000000000) && (
+                board.cell_filled(x+1, y+1) ||
+                board.cell_filled(x+2, y+1) && (x == 0 || board.cell_filled(x-1, y+1))
+            )
+        ),
+        (Piece::L, Rotation::South) => (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000100_0000000000) && (
+                board.cell_filled(x+1, y+1) ||
+                board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
+            )
+        ) || (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000000) &&
+            board.cell_filled(x+2, y+1) && (x == 0 || board.cell_filled(x-1, y+1))
+        ),
+        (Piece::J, Rotation::South) => (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000001_0000000000) && (
+                board.cell_filled(x+1, y+1) ||
+                board.cell_filled(x+2, y+1) && (x == 0 || board.cell_filled(x-1, y+1))
+            )
+        ) || (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000000) &&
+            board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
+        ),
+        (Piece::T, Rotation::North) => (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000110) &&
+            board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
+        ) || (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000011) && 
+            board.cell_filled(x+2, y+1) && (x == 0 || board.cell_filled(x-1, y+1))
+        ),
+        (Piece::T, Rotation::West) => (
+            x != 8 &&
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000110)
+        ),
+        (Piece::T, Rotation::East) => (
+            x != 0 &&
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000011>>1) &&
+            !board.cell_filled(x-1, y) // due to jank we need to check that last bit manually
+        ),
+        (Piece::T, Rotation::South) => (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000011)
+        ) || (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000110)
+        ),
+        _ => false
+    }
+}

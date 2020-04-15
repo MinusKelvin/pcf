@@ -28,7 +28,7 @@ fn main() {
 
     let mut fumen = Fumen::default();
     fumen.pages.pop();
-    pcf::solve_pc(&queue, board, true, true, pcf::placeability::always, |soln| {
+    pcf::solve_pc(&queue, board, true, true, pcf::placeability::simple_srs_spins, |soln| {
         common::add_placement_pages(&mut fumen, board, soln);
         SearchStatus::Continue
     });

@@ -1,5 +1,5 @@
 use fumen::{ Fumen, Page };
-use pcf::{ BitBoard, Piece, SearchStatus };
+use pcf::{ BitBoard, Piece, SearchStatus, placeability };
 use rand::prelude::*;
 
 mod common;
@@ -19,7 +19,7 @@ fn main() {
     let (send, recv) = std::sync::mpsc::channel();
     let mut fumen = SendOnDrop::new(send, fumen);
     let t = std::time::Instant::now();
-    pcf::solve_pc_mt(&queue, BitBoard(0), true, true, pcf::placeability::tucks, move |soln| {
+    pcf::solve_pc_mt(&queue, BitBoard(0), true, true, placeability::tucks, move |soln| {
         common::add_placement_pages(&mut fumen, BitBoard(0), soln);
         SearchStatus::Continue
     });
@@ -33,7 +33,7 @@ fn main() {
 
     use std::io::Write;
     writeln!(std::fs::File::create("solutions.txt").unwrap(), "{}", fumen.encode()).unwrap();
-    println!("{} Tuck solutions have been saved to solutions.txt", fumen.pages.len() / 10);
+    println!("{} solutions have been saved to solutions.txt", fumen.pages.len() / 10);
     println!("(these fumens can be so large that you can't view it by clicking a URL)");
 }
 
