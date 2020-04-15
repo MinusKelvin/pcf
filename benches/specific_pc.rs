@@ -49,7 +49,7 @@ fn benchmark(c: &mut Criterion) {
                 Placement { kind: PieceState::JSouth10, x: 7 },
             ],
             true, false,
-            pcf::placeability::hard_drop_only,
+            pcf::placeability::always,
             |_| SearchStatus::Continue
         )
     ));
