@@ -131,6 +131,11 @@ impl BitBoard {
         self.0 & 1 << x+y*10 != 0
     }
 
+    #[inline]
+    pub fn line_filled(self, y: usize) -> bool {
+        self.0 >> 10*y & (1<<10)-1 == (1<<10)-1
+    }
+
     pub fn leftmost_empty_column(self, height: usize) -> usize {
         // start with completely filled row
         let mut collapsed = (1 << 10) - 1;

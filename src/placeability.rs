@@ -4,7 +4,12 @@ pub fn always(_: BitBoard, _: Placement) -> bool {
     true
 }
 
-pub fn hard_drop_only(board: BitBoard, placement: Placement) -> bool {
+pub fn hard_drop_only(mut board: BitBoard, placement: Placement) -> bool {
+    for y in 0..6 {
+        if board.line_filled(y) {
+            board.0 &= !((1<<10)-1 << 10*y);
+        }
+    }
     !board.overlaps(placement.harddrop_mask())
 }
 
