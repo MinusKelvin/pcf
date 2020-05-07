@@ -175,7 +175,7 @@ impl Placement {
     }
 
     #[inline]
-    fn placeable(self, on: BitBoard) -> bool {
+    fn placeable(self, mut on: BitBoard) -> bool {
         let mut hurdled_lines = 0;
         for i in (1..5).rev() {
             hurdled_lines <<= 10;
@@ -188,6 +188,12 @@ impl Placement {
             // hurdled lines not filled means the hurdled placement is impossible
             false
         } else {
+            // copy lines below filled lines into filled lines
+            for y in 1..6 {
+                if on.line_filled(y) {
+                    on.0 &= (on.0 << 10) | !((1<<10) - 1 << 10*y);
+                }
+            }
             self.kind.y()==0 || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
         }
     }
