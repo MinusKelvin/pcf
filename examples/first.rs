@@ -1,6 +1,7 @@
 use fumen::{ Fumen, Page };
-use pcf::{ BitBoard, Piece, SearchStatus, placeability };
+use pcf::{ BitBoard, Piece, placeability };
 use rand::prelude::*;
+use std::sync::atomic::AtomicBool;
 
 mod common;
 
@@ -19,10 +20,10 @@ fn main() {
     let (send, recv) = std::sync::mpsc::channel();
     let mut fumen = SendOnDrop::new(send, fumen);
     let t = std::time::Instant::now();
-    pcf::solve_pc_mt(&queue, BitBoard(0), true, true, placeability::tucks, move |soln| {
-        common::add_placement_pages(&mut fumen, BitBoard(0), soln);
-        SearchStatus::Continue
-    });
+    pcf::solve_pc_mt(
+        &queue, BitBoard(0), true, true, &AtomicBool::new(false), placeability::tucks,
+        move |soln| common::add_placement_pages(&mut fumen, BitBoard(0), soln)
+    );
     println!("Done in {:?}.", t.elapsed());
 
     let mut fumen = Fumen::default();

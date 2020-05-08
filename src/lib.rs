@@ -220,12 +220,6 @@ impl Placement {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub enum SearchStatus {
-    Continue,
-    Abort
-}
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum Rotation {
     North, East, South, West
 }

@@ -1,5 +1,6 @@
 use criterion::{ black_box, criterion_group, criterion_main, Criterion };
-use pcf::{ BitBoard, PieceSet, Piece::*, SearchStatus };
+use pcf::{ BitBoard, PieceSet, Piece::* };
+use std::sync::atomic::AtomicBool;
 
 fn benchmark(c: &mut Criterion) {
     let mut threaded = c.benchmark_group("ISZL com");
@@ -17,7 +18,8 @@ fn benchmark(c: &mut Criterion) {
                     .with(T).with(T)
                 ),
                 black_box(BitBoard(0b0000001111_0000000111_0000011111_0000001111)),
-                4, |_| SearchStatus::Continue
+                &AtomicBool::new(false),
+                4, |_| {}
             )
         ))
     );
@@ -35,7 +37,8 @@ fn benchmark(c: &mut Criterion) {
                     .with(T).with(T)
                 ),
                 black_box(BitBoard(0b0000001111_0000000111_0000011111_0000001111)),
-                4, |_| SearchStatus::Continue
+                &AtomicBool::new(false),
+                4, |_| {}
             )
         ))
     );
@@ -53,7 +56,8 @@ fn benchmark(c: &mut Criterion) {
                     .with(T).with(T)
                 ),
                 black_box(BitBoard(0b0000001111_0000000111_0000011111_0000001111)),
-                4, |_| SearchStatus::Continue
+                &AtomicBool::new(false),
+                4, |_| {}
             )
         ))
     );
@@ -71,7 +75,8 @@ fn benchmark(c: &mut Criterion) {
                     .with(T).with(T)
                 ),
                 black_box(BitBoard(0b0000001111_0000000111_0000011111_0000001111)),
-                4, |_| SearchStatus::Continue
+                &AtomicBool::new(false),
+                4, |_| {}
             )
         ))
     );
@@ -89,7 +94,8 @@ fn benchmark(c: &mut Criterion) {
                     .with(T).with(T)
                 ),
                 black_box(BitBoard(0b0000001111_0000000111_0000011111_0000001111)),
-                4, |_| SearchStatus::Continue
+                &AtomicBool::new(false),
+                4, |_| {}
             )
         ))
     );

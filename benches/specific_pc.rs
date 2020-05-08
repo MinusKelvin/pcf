@@ -1,16 +1,19 @@
 use criterion::{ black_box, criterion_group, criterion_main, Criterion };
-use pcf::{ BitBoard, SearchStatus, Placement, PieceState };
+use pcf::{ BitBoard, Placement, PieceState };
 use pcf::Piece::*;
+use std::sync::atomic::{ AtomicBool, Ordering };
 
 fn benchmark(c: &mut Criterion) {
-    c.bench_function("first PC", |b| b.iter(||
+    c.bench_function("first PC", |b| b.iter(|| {
+        let abort = AtomicBool::new(false);
         pcf::solve_pc(
             black_box(&[L, T, I, J, Z, S, O, I, Z, O, J]),
             black_box(BitBoard(0)),
-            true, false, pcf::placeability::hard_drop_only,
-            |_| SearchStatus::Abort
+            true, false, &abort,
+            pcf::placeability::hard_drop_only,
+            |_| abort.store(true, Ordering::Relaxed)
         )
-    ));
+    }));
     c.bench_function("solve combo harddrop only", |b| b.iter(||
         pcf::solve_placement_combination(
             black_box(&[J, L, O, I, T, S, Z, J, L, I, O]),
@@ -27,9 +30,9 @@ fn benchmark(c: &mut Criterion) {
                 Placement { kind: PieceState::ZHorizontal00, x: 7 },
                 Placement { kind: PieceState::JSouth10, x: 7 },
             ],
-            true, false,
+            true, false, &AtomicBool::new(false),
             pcf::placeability::hard_drop_only,
-            |_| SearchStatus::Continue
+            |_| {}
         )
     ));
     c.bench_function("solve combo always placeable", |b| b.iter(||
@@ -48,9 +51,9 @@ fn benchmark(c: &mut Criterion) {
                 Placement { kind: PieceState::ZHorizontal00, x: 7 },
                 Placement { kind: PieceState::JSouth10, x: 7 },
             ],
-            true, false,
+            true, false, &AtomicBool::new(false),
             pcf::placeability::always,
-            |_| SearchStatus::Continue
+            |_| {}
         )
     ));
     c.bench_function("solve combo tucks", |b| b.iter(||
@@ -69,9 +72,9 @@ fn benchmark(c: &mut Criterion) {
                 Placement { kind: PieceState::LWest100, x: 7 },
                 Placement { kind: PieceState::IVertical0000, x: 9 },
             ],
-            true, false,
+            true, false, &AtomicBool::new(false),
             pcf::placeability::tucks,
-            |_| SearchStatus::Continue
+            |_| {}
         )
     ));
     c.bench_function("solve combo simple srs", |b| b.iter(||
@@ -90,9 +93,9 @@ fn benchmark(c: &mut Criterion) {
                 Placement { kind: PieceState::LNorth00, x: 7 },
                 Placement { kind: PieceState::TSouth10, x: 7 },
             ],
-            true, false,
+            true, false, &AtomicBool::new(false),
             pcf::placeability::simple_srs_spins,
-            |_| SearchStatus::Continue
+            |_| {}
         )
     ));
 }

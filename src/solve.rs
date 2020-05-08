@@ -1,16 +1,18 @@
 use crate::*;
+use std::sync::atomic::AtomicBool;
 
 pub fn solve_pc(
     queue: &[Piece],
     board: BitBoard,
     hold_allowed: bool,
     unique: bool,
+    abort: &AtomicBool,
     placeability_judge: impl Fn(BitBoard, Placement) -> bool,
-    mut pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
+    mut pc_consumer: impl FnMut(&[Placement])
 ) {
     solve_pc_prep(queue, board, hold_allowed, |queue, height| {
         let mut found = false;
-        find_combinations(queue.to_set(), board, height, |combo| {
+        find_combinations(queue.to_set(), board, abort, height, |combo| {
             solve_placement_combo(
                 queue, board, combo,
                 hold_allowed, unique, &placeability_judge,
@@ -29,14 +31,15 @@ pub fn solve_pc_mt(
     board: BitBoard,
     hold_allowed: bool,
     unique: bool,
+    abort: &AtomicBool,
     placeability_judge: impl Fn(BitBoard, Placement) -> bool + Sync,
-    pc_consumer: impl FnMut(&[Placement]) -> SearchStatus + Clone + Send
+    pc_consumer: impl FnMut(&[Placement]) + Clone + Send
 ) {
     let placeability_judge = &placeability_judge;
     solve_pc_prep(queue, board, hold_allowed, |queue, height| {
         let found = &std::sync::atomic::AtomicBool::new(false);
         let mut pc_consumer = pc_consumer.clone();
-        find_combinations_mt(queue.to_set(), board, height, move |combo| {
+        find_combinations_mt(queue.to_set(), board, abort, height, move |combo| {
             solve_placement_combo(
                 queue, board, combo,
                 hold_allowed, unique, placeability_judge,
@@ -96,8 +99,9 @@ pub fn solve_placement_combination(
     combination: &[Placement],
     hold_allowed: bool,
     unique: bool,
+    abort: &AtomicBool,
     placability_judge: impl Fn(BitBoard, Placement) -> bool,
-    pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
+    pc_consumer: impl FnMut(&[Placement])
 ) {
     solve_placement_combo(
         queue.iter().copied().collect(), board, &mut combination.to_vec(),
@@ -112,12 +116,12 @@ fn solve_placement_combo(
     hold_allowed: bool,
     unique: bool,
     placability_judge: impl Fn(BitBoard, Placement) -> bool,
-    mut pc_consumer: impl FnMut(&[Placement]) -> SearchStatus
-) -> SearchStatus {
+    mut pc_consumer: impl FnMut(&[Placement])
+) {
     solve(
         &mut vec![], queue, board, &mut combination.to_vec(),
         hold_allowed, unique, &placability_judge, &mut pc_consumer
-    ).err().unwrap_or(SearchStatus::Continue)
+    );
 }
 
 fn solve(
@@ -128,12 +132,14 @@ fn solve(
     hold_allowed: bool,
     unique: bool,
     placability_judge: &impl Fn(BitBoard, Placement) -> bool,
-    pc_consumer: &mut impl FnMut(&[Placement]) -> SearchStatus
-) -> Result<(), SearchStatus> {
+    pc_consumer: &mut impl FnMut(&[Placement])
+) -> Option<()> {
     if remaining.is_empty() {
-        match pc_consumer(permutation) {
-            SearchStatus::Continue => if unique { Err(SearchStatus::Continue) } else { Ok(()) },
-            SearchStatus::Abort => Err(SearchStatus::Abort)
+        pc_consumer(permutation);
+        if unique {
+            None
+        } else {
+            Some(())
         }
     } else {
         // we have the invariant that the range 0..n remains the same from one iteration to the next
@@ -174,7 +180,7 @@ fn solve(
             // the above restores the original state of the remaining vec
         }
 
-        Ok(())
+        Some(())
     }
 }
 

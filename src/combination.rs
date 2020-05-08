@@ -1,26 +1,29 @@
 use crate::*;
+use std::sync::atomic::{ AtomicBool, Ordering };
 
 pub fn find_combinations(
-    piece_set: PieceSet, board: BitBoard, height: usize,
-    mut combo_consumer: impl FnMut(&[Placement]) -> SearchStatus
+    piece_set: PieceSet, board: BitBoard, abort: &AtomicBool, height: usize,
+    mut combo_consumer: impl FnMut(&[Placement])
 ) {
     find_combos_st(
         &mut vec![],
         board,
         BitBoard::filled(height),
         piece_set,
+        abort,
         height,
         &mut combo_consumer
     );
 }
 
 pub fn find_combinations_mt(
-    piece_set: PieceSet, board: BitBoard, height: usize,
-    combo_consumer: impl FnMut(&[Placement]) -> SearchStatus + Clone + Send
+    piece_set: PieceSet, board: BitBoard, abort: &AtomicBool, height: usize,
+    combo_consumer: impl FnMut(&[Placement]) + Clone + Send
 ) {
     rayon::scope(|scope|
         find_combos_mt(
-            scope, vec![], board, BitBoard::filled(height), piece_set, height, 0, combo_consumer
+            scope, vec![], board, BitBoard::filled(height), piece_set,
+            abort, height, 0, combo_consumer
         )
     );
 }
@@ -30,27 +33,24 @@ fn find_combos_st(
     board: BitBoard,
     inverse_placed: BitBoard,
     piece_set: PieceSet,
+    abort: &AtomicBool,
     height: usize,
-    combo_consumer: &mut impl FnMut(&[Placement]) -> SearchStatus
-) -> Option<()> {
+    combo_consumer: &mut impl FnMut(&[Placement])
+) {
     find_combos(
-        board, inverse_placed, piece_set, height,
+        board, inverse_placed, piece_set, abort, height,
         |placement, board, inverse_placed, piece_set| {
             placements.push(placement);
-            let result = if has_cyclic_dependency(inverse_placed, placements, height) {
-                Some(())
+            if has_cyclic_dependency(inverse_placed, placements, height) {
+                
             } else if board == BitBoard::filled(height) {
-                // I would like to just overload the ? operator for SearchStatus,
-                // but the try_trait feature is unstable
-                match combo_consumer(placements) {
-                    SearchStatus::Continue => Some(()),
-                    SearchStatus::Abort => None
-                }
+                combo_consumer(placements);
             } else {
-                find_combos_st(placements, board, inverse_placed, piece_set, height, combo_consumer)
+                find_combos_st(
+                    placements, board, inverse_placed, piece_set, abort, height, combo_consumer
+                )
             };
             placements.pop();
-            result
         }
     )
 }
@@ -61,27 +61,27 @@ fn find_combos_mt<'s>(
     board: BitBoard,
     inverse_placed: BitBoard,
     piece_set: PieceSet,
+    abort: &'s AtomicBool,
     height: usize, recursions: usize,
-    mut combo_consumer: impl FnMut(&[Placement]) -> SearchStatus + Clone + Send + 's
+    mut combo_consumer: impl FnMut(&[Placement]) + Clone + Send + 's
 ) {
     if recursions >= 3 {
         find_combos_st(
-            &mut placements, board, inverse_placed, piece_set, height, &mut combo_consumer
+            &mut placements, board, inverse_placed, piece_set, abort, height, &mut combo_consumer
         );
     } else {
         find_combos(
-            board, inverse_placed, piece_set, height,
+            board, inverse_placed, piece_set, abort, height,
             |placement, board, inverse_placed, piece_set| {
                 placements.push(placement);
                 if !has_cyclic_dependency(inverse_placed, &placements, height) {
                     let p = placements.clone();
                     let c = combo_consumer.clone();
                     scope.spawn(move |scope| find_combos_mt(
-                        scope, p, board, inverse_placed, piece_set, height, recursions+1, c
+                        scope, p, board, inverse_placed, piece_set, abort, height, recursions+1, c
                     ));
                 }
                 placements.pop();
-                Some(())
             }
         );
     }
@@ -92,9 +92,10 @@ fn find_combos(
     board: BitBoard,
     inverse_placed: BitBoard,
     piece_set: PieceSet,
+    abort: &AtomicBool,
     height: usize,
-    mut next: impl FnMut(Placement, BitBoard, BitBoard, PieceSet) -> Option<()>
-) -> Option<()> {
+    mut next: impl FnMut(Placement, BitBoard, BitBoard, PieceSet)
+) {
     let x = board.leftmost_empty_column(height);
     let mut y = 0;
     for i in 0..height {
@@ -130,13 +131,16 @@ fn find_combos(
             continue;
         }
 
+        // Check if we should abort the search
+        if abort.load(Ordering::Relaxed) {
+            return;
+        }
+
         let new_board = piece_board.combine(board);
         let new_inverse_placed = inverse_placed.remove(piece_board);
 
-        next(placement, new_board, new_inverse_placed, piece_set.without(piece_state.piece()))?;
+        next(placement, new_board, new_inverse_placed, piece_set.without(piece_state.piece()));
     }
-
-    Some(())
 }
 
 
