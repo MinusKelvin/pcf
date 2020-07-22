@@ -74,7 +74,11 @@ fn find_combos_mt<'s>(
             board, inverse_placed, piece_set, abort, height,
             |placement, board, inverse_placed, piece_set| {
                 placements.push(placement);
-                if !has_cyclic_dependency(inverse_placed, &placements, height) {
+                if has_cyclic_dependency(inverse_placed, &placements, height) {
+
+                } else if board == BitBoard::filled(height) {
+                    combo_consumer(&placements);
+                } else {
                     let p = placements.clone();
                     let c = combo_consumer.clone();
                     scope.spawn(move |scope| find_combos_mt(
