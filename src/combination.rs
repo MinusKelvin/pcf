@@ -110,40 +110,42 @@ fn find_combos(
     }
     let y = y;
 
-    for &piece_state in crate::data::PIECE_STATES_FOR_HEIGHT[height-1] {
-        if !piece_set.contains(piece_state.piece()) {
+    for &piece in &PIECES {
+        if !piece_set.contains(piece) {
             // this piece can't be used again
             continue
         }
-        if x + piece_state.width() as usize > 10 {
-            // piece doesn't fit
-            continue
-        }
-        
-        let placement = Placement {
-            kind: piece_state,
-            x: x as u8
-        };
-        let piece_board = placement.board();
+        for &piece_state in crate::data::PIECE_STATES_FOR_HEIGHT_AND_PIECE[height-1][piece as usize] {
+            if x + piece_state.width() as usize > 10 {
+                // piece doesn't fit
+                continue
+            }
+            
+            let placement = Placement {
+                kind: piece_state,
+                x: x as u8
+            };
+            let piece_board = placement.board();
 
-        if !piece_board.cell_filled(x, y) {
-            // piece doesn't fill the cell we're trying to fill
-            continue;
-        }
-        if piece_board.overlaps(board) {
-            // can't place piece here
-            continue;
-        }
+            if !piece_board.cell_filled(x, y) {
+                // piece doesn't fill the cell we're trying to fill
+                continue;
+            }
+            if piece_board.overlaps(board) {
+                // can't place piece here
+                continue;
+            }
 
-        // Check if we should abort the search
-        if abort.load(Ordering::Relaxed) {
-            return;
+            // Check if we should abort the search
+            if abort.load(Ordering::Relaxed) {
+                return;
+            }
+
+            let new_board = piece_board.combine(board);
+            let new_inverse_placed = inverse_placed.remove(piece_board);
+
+            next(placement, new_board, new_inverse_placed, piece_set.without(piece_state.piece()));
         }
-
-        let new_board = piece_board.combine(board);
-        let new_inverse_placed = inverse_placed.remove(piece_board);
-
-        next(placement, new_board, new_inverse_placed, piece_set.without(piece_state.piece()));
     }
 }
 

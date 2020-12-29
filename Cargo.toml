@@ -15,6 +15,9 @@ criterion = "0.3"
 fumen = "0.1"
 rand = "0.7"
 
+[build-dependencies]
+arrayvec = "0.5"
+
 [[bench]]
 name = "combination"
 harness = false

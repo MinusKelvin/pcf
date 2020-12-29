@@ -3,6 +3,8 @@ use std::path::Path;
 use std::io::Write;
 use std::env;
 
+use arrayvec::ArrayVec;
+
 fn main() -> std::io::Result<()> {
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -107,10 +109,13 @@ fn main() -> std::io::Result<()> {
         "const PIECE_SRS: &'static [&'static [SrsPiece]; {}] = &[", states.len()
     );
 
-    let mut heights = [
-        String::new(), String::new(), String::new(),
-        String::new(), String::new(), String::new(),
-    ];
+    let mut heights_and_piece: [[String; 7]; 6] = {
+        let mut a1 = ArrayVec::new();
+        a1.extend(std::iter::repeat(String::new()));
+        let mut a = ArrayVec::new();
+        a.extend(std::iter::repeat(a1.into_inner().unwrap()));
+        a.into_inner().unwrap()
+    };
 
     for data in &states {
         piece_state_enum.push_str(&data.name);
@@ -135,15 +140,20 @@ fn main() -> std::io::Result<()> {
         piece_srs.push_str("],");
 
         for i in data.height as usize - 1 .. 6 {
-            heights[i].push_str("PieceState::");
-            heights[i].push_str(&data.name);
-            heights[i].push(',');
+            let s = &mut heights_and_piece[i][piece_index(data.name.chars().next().unwrap())];
+            s.push_str("PieceState::");
+            s.push_str(&data.name);
+            s.push(',');
         }
     }
 
-    writeln!(file, "pub const PIECE_STATES_FOR_HEIGHT: &'static [&'static [PieceState]; 6] = &[")?;
-    for h in &heights {
-        writeln!(file, "&[{}],", h)?;
+    writeln!(file, "pub const PIECE_STATES_FOR_HEIGHT_AND_PIECE: &'static [[&'static [PieceState]; 7]; 6] = &[")?;
+    for h in &heights_and_piece {
+        writeln!(file, "[")?;
+        for v in h {
+            writeln!(file, "&[{}],", v)?;
+        }
+        writeln!(file, "],")?;
     }
     writeln!(file, "];")?;
 
@@ -198,6 +208,19 @@ fn main() -> std::io::Result<()> {
     })?;
 
     writeln!(file, "}}")
+}
+
+fn piece_index(name: char) -> usize {
+    match name {
+        'S' => 0,
+        'Z' => 1,
+        'J' => 2,
+        'L' => 3,
+        'T' => 4,
+        'O' => 5,
+        'I' => 6,
+        _ => unreachable!("invalid piece: {:?}", name)
+    }
 }
 
 fn gen_piece_data(
