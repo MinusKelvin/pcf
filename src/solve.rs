@@ -104,7 +104,7 @@ pub fn solve_placement_combination(
     pc_consumer: impl FnMut(&[Placement])
 ) {
     solve_placement_combo(
-        queue.iter().copied().collect(), board, &mut combination.to_vec(),
+        queue.iter().copied().collect(), board, combination,
         hold_allowed, unique, placability_judge, pc_consumer
     );
 }
@@ -118,17 +118,19 @@ fn solve_placement_combo(
     placability_judge: impl Fn(BitBoard, Placement) -> bool,
     mut pc_consumer: impl FnMut(&[Placement])
 ) {
+    let mut combo = ArrayVec::new();
+    combo.try_extend_from_slice(combination).unwrap();
     solve(
-        &mut vec![], queue, board, &mut combination.to_vec(),
+        &mut ArrayVec::new(), queue, board, &mut combo,
         hold_allowed, unique, &placability_judge, &mut pc_consumer
     );
 }
 
 fn solve(
-    permutation: &mut Vec<Placement>,
+    permutation: &mut ArrayVec<[Placement; 15]>,
     queue: PieceSequence,
     board: BitBoard,
-    remaining: &mut Vec<Placement>,
+    remaining: &mut ArrayVec<[Placement; 15]>,
     hold_allowed: bool,
     unique: bool,
     placability_judge: &impl Fn(BitBoard, Placement) -> bool,

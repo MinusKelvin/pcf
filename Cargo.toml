@@ -7,12 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrayvec = "0.5.1"
-rayon = "1.3.0"
+arrayvec = "0.5"
+rayon = "1.3"
 
 [dev-dependencies]
 criterion = "0.3"
-fumen = { git = "https://github.com/MinusKelvin/fumen-rs" }
+fumen = "0.1"
 rand = "0.7"
 
 [[bench]]
@@ -30,3 +30,6 @@ harness = false
 [[bench]]
 name = "threaded_combos"
 harness = false
+
+[profile.release]
+debug = true
