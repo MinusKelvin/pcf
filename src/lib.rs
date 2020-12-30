@@ -48,30 +48,6 @@ impl PieceSet {
         self.0[p as usize] += 1;
         self
     }
-
-    fn candidate_index(self) -> Result<u32, ()> {
-        let mut index = 0;
-        for &count in &self.0 {
-            if count > 4 {
-                return Err(())
-            }
-            index = index * 5 + count as u32;
-        }
-        Ok(index)
-    }
-
-    fn from_candidate_index(mut index: u32) -> Option<PieceSet> {
-        let mut this = PieceSet::default();
-        for count in this.0.iter_mut().rev() {
-            *count = (index % 5) as u8;
-            index /= 5;
-        }
-        if index == 0 {
-            Some(this)
-        } else {
-            None
-        }
-    }
 }
 
 impl Default for PieceSet {

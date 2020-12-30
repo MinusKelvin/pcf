@@ -4,16 +4,6 @@ use pcf::Piece::*;
 use std::sync::atomic::{ AtomicBool, Ordering };
 
 fn benchmark(c: &mut Criterion) {
-    c.bench_function("first PC", |b| b.iter(|| {
-        let abort = AtomicBool::new(false);
-        pcf::solve_pc(
-            black_box(&[L, T, I, J, Z, S, O, I, Z, O, J]),
-            black_box(BitBoard(0)),
-            true, false, &abort,
-            pcf::placeability::hard_drop_only,
-            |_| abort.store(true, Ordering::Relaxed)
-        )
-    }));
     c.bench_function("solve combo harddrop only", |b| b.iter(||
         pcf::solve_placement_combination(
             black_box(&[J, L, O, I, T, S, Z, J, L, I, O]),
