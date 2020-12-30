@@ -144,7 +144,7 @@ fn find_combos(
             let new_board = piece_board.combine(board);
             let new_inverse_placed = inverse_placed.remove(piece_board);
 
-            next(placement, new_board, new_inverse_placed, piece_set.without(piece_state.piece()));
+            next(placement, new_board, new_inverse_placed, piece_set.without(piece));
         }
     }
 }
