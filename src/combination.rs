@@ -137,7 +137,7 @@ fn find_combos(
             }
 
             // Check if we should abort the search
-            if abort.load(Ordering::Relaxed) {
+            if abort.load(Ordering::Acquire) {
                 return;
             }
 
