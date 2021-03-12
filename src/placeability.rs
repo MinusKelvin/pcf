@@ -46,6 +46,8 @@ pub fn simple_srs_spins(board: BitBoard, placement: Placement) -> bool {
     let y = piece.y as usize;
 
     let check_empty = |mask: u64| board.0 & mask << 10*y + x == 0;
+    // vertical offset so we can check for empty cells below the placement
+    let check_empty_v = |mask: u64, off: usize| y >= off && board.0 & mask << 10*(y-off) + x == 0;
 
     // this is a visible description of all the spins we're detecting:
     // http://fumen.zui.jp/?v115@pgxhHexhIewhReA8cevEn9gwhIexhlenpfpgQaAewh?GeQaAewhGeRawhGeRaAeA8FeAAceflf+gwhIexhkenpuEBU?9UTASIB5DjB98AQWrrDTG98AXO98AwyjXEroo2AseirDFbE?cEoe0TAyE88AQzgeEFbMwDv3STASorJEvwh1DIhRaAAGeA8?beaquAAIhxhkeyufIhRaGeA8AAAeA8ZeaqfIhxhkeyuf+gR?aHeQ4QaGeAABeAAZealf+gxhIewhkeipf+gRaGeA8AAQaA8?jealf+gxhIewhkeipf/gQaHewhQakeelf/gwhIewhkempfH?hAAAeQaAAFeA8BeA8ZedqfJhwhIewhae1ufIhQaJeQaaetp?fIhwhIewhbeVvfIhQaHeAAQaAeAAZetpfIhwhlelpfIhQaJ?ewhae9pfpgwhAeQaGewhAeQaGewhAeQaGewhAeQaIeQaae9?pfIhwhlelpfIhQaHewhcetpf
@@ -65,18 +67,30 @@ pub fn simple_srs_spins(board: BitBoard, placement: Placement) -> bool {
             (placement.x == 0 || board.cell_filled(x-1, y+2))
         ),
         (Piece::L, Rotation::North) => (
+            check_empty_v(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000110, 1)
+        ) || (
+            check_empty_v(0b_0000000011_0000000011_0000000011_0000000011_0000000010_0000000010, 1)
+        ) || (
             check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000000_0000000000) && (
                 board.cell_filled(x+1, y+1) ||
                 board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
             )
         ),
         (Piece::J, Rotation::North) => (
+            check_empty_v(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000011, 1)
+        ) || (
+            check_empty_v(0b_0000000110_0000000110_0000000110_0000000110_0000000010_0000000010, 1)
+        ) || (
             check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000000_0000000000) && (
                 board.cell_filled(x+1, y+1) ||
                 board.cell_filled(x+2, y+1) && (x == 0 || board.cell_filled(x-1, y+1))
             )
         ),
         (Piece::L, Rotation::South) => (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000110)
+        ) || (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000010_0000000010)
+        ) || (
             check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000100_0000000000) && (
                 board.cell_filled(x+1, y+1) ||
                 board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
@@ -86,6 +100,10 @@ pub fn simple_srs_spins(board: BitBoard, placement: Placement) -> bool {
             board.cell_filled(x+2, y+1) && (x == 0 || board.cell_filled(x-1, y+1))
         ),
         (Piece::J, Rotation::South) => (
+            check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000011)
+        ) || (
+            check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000010_0000000010)
+        ) || (
             check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000001_0000000000) && (
                 board.cell_filled(x+1, y+1) ||
                 board.cell_filled(x+2, y+1) && (x == 0 || board.cell_filled(x-1, y+1))
@@ -95,6 +113,10 @@ pub fn simple_srs_spins(board: BitBoard, placement: Placement) -> bool {
             board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
         ),
         (Piece::T, Rotation::North) => (
+            check_empty_v(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000010, 1)
+        ) || (
+            check_empty_v(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000010, 1)
+        ) || (
             check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000110) &&
             board.cell_filled(x, y+1) && (x == 7 || board.cell_filled(x+3, y+1))
         ) || (
