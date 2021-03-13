@@ -50,7 +50,7 @@ pub fn simple_srs_spins(board: BitBoard, placement: Placement) -> bool {
     let check_empty_v = |mask: u64, off: usize| y >= off && board.0 & mask << 10*(y-off) + x == 0;
 
     // this is a visible description of all the spins we're detecting:
-    // http://fumen.zui.jp/?v115@pgxhHexhIewhReA8cevEn9gwhIexhlenpfpgQaAewh?GeQaAewhGeRawhGeRaAeA8FeAAceflf+gwhIexhkenpuEBU?9UTASIB5DjB98AQWrrDTG98AXO98AwyjXEroo2AseirDFbE?cEoe0TAyE88AQzgeEFbMwDv3STASorJEvwh1DIhRaAAGeA8?beaquAAIhxhkeyufIhRaGeA8AAAeA8ZeaqfIhxhkeyuf+gR?aHeQ4QaGeAABeAAZealf+gxhIewhkeipf+gRaGeA8AAQaA8?jealf+gxhIewhkeipf/gQaHewhQakeelf/gwhIewhkempfH?hAAAeQaAAFeA8BeA8ZedqfJhwhIewhae1ufIhQaJeQaaetp?fIhwhIewhbeVvfIhQaHeAAQaAeAAZetpfIhwhlelpfIhQaJ?ewhae9pfpgwhAeQaGewhAeQaGewhAeQaGewhAeQaIeQaae9?pfIhwhlelpfIhQaHewhcetpf
+    // https://fumen.zui.jp/?v115@pgxhHexhIewhReA8cevEn9gwhIexhlenpfpgQaAewh?GeQaAewhGeRawhGeRaAeA8FeAAceflf+gwhIexhkenpuEBU?9UTASIB5DjB98AQWrrDTG98AXO98AwyjXEroo2AseirDFbE?cEoe0TAyE88AQzgeEFbMwDv3STASorJEvwh1DIhRaAAGeA8?beaquAAIhxhkeyufIhRaGeA8AAAeA8ZeaqfIhxhkeyuf+gR?aHeQ4QaGeAABeAAZealf+gxhIewhkeipf+gRaGeA8AAQaA8?jealf+gxhIewhkeipf/gQaHewhQakeelf/gwhIewhkempfH?hAAAeQaAAFeA8BeA8ZedqfJhwhIewhae1ufIhQaJeQaaetp?fIhwhIewhbeVvfIhQaHeAAQaAeAAZetpfIhwhlelpfIhQaJ?ewhae9pfpgwhAeQaGewhAeQaGewhAeQaGewhAeQaIeQaae9?pfIhwhlelpfIhQaHewhcetpfHhQaIeQace6pfHhxhSewhRe?ypfHhRaSeQaRe6pfHhxhSewhReipfpgQaAewhGeQaAewhGe?QaAewhGeRawhIewhHeQaReqpfIhwhJeQaHexhQeipfIhQaJ?ewhHeRaQeqpfIhwhQaIeQaHexhQeypfrgQaIeQaHeQpQaHe?QpIeAtIeQpQaQeAAe+gwSIewSHeAtAeBtGewSReAAeqgQaw?hHeQawhHeQaAtHeQaAtGeBPAeAPGeQaAtQeAAe/gwSIewSG?eBtAeAtHewSQeAAe
     // the cyan blocks are the areas check_empty calls check, the gray blocks are blocks
     // that we check to make sure are filled
     match (piece.piece, piece.rotation) {
@@ -136,6 +136,11 @@ pub fn simple_srs_spins(board: BitBoard, placement: Placement) -> bool {
             check_empty(0b_0000000011_0000000011_0000000011_0000000011_0000000011_0000000011)
         ) || (
             check_empty(0b_0000000110_0000000110_0000000110_0000000110_0000000110_0000000110)
+        ),
+        (Piece::I, Rotation::North) => (
+            check_empty_v(0b_0000000010_0000000010_0000000010_0000000010_0000000010_0000000010, 1)
+        ) || (
+            check_empty_v(0b_0000000100_0000000100_0000000100_0000000100_0000000100_0000000100, 1)
         ),
         _ => false
     }

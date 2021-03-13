@@ -104,7 +104,7 @@ impl BitBoard {
 
     #[inline]
     pub fn cell_filled(self, x: usize, y: usize) -> bool {
-        self.0 & 1 << x+y*10 != 0
+        y < 6 && self.0 & 1 << x+y*10 != 0
     }
 
     #[inline]
