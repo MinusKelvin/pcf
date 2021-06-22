@@ -161,21 +161,21 @@ fn has_cyclic_dependency(
     // that haven't been filled by anything? Yes actually, since we could choose a set of
     // placements that fill in the empty cells that are all supported. At the very least, we
     // can't exclude the possibility since we need to take a conservative approach here.
-    let mut supported = inverse_placed;
+    let mut supports = inverse_placed;
 
     // O(n^2) loop is kinda yikes, but the whole find_combinations routine is O(n!) so...
     'place: loop {
         for &p in &*placements {
             let piece_board = p.board();
 
-            if supported.overlaps(piece_board) {
+            if supports.overlaps(piece_board) {
                 // this basically checks if we've already placed p on the board
                 continue
             }
 
-            if p.placeable(supported) {
+            if p.supported(supports) {
                 // supported placement
-                supported = supported.combine(piece_board);
+                supports = supports.combine(piece_board);
                 continue 'place;
             }
         }
@@ -186,5 +186,5 @@ fn has_cyclic_dependency(
     // This is reached when all placements that can be supported are placed. If there are
     // any holes in the supported field, then we know that there are some placements that
     // have a cyclic dependency and therefore this combination can't ever be placed.
-    supported != BitBoard::filled(height)
+    supports != BitBoard::filled(height)
 }

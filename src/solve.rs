@@ -154,8 +154,8 @@ fn solve(
                 // can't place this placement since it's neither next nor obtainable through hold
                 continue
             }
-            if !placement.placeable(board) {
-                // unplaceable placement obviously can't come next
+            if !placement.supported(board) {
+                // unsupported placement obviously can't come next
                 continue
             }
             if !placability_judge(board, placement) {

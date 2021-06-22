@@ -151,7 +151,7 @@ impl Placement {
     }
 
     #[inline]
-    fn placeable(self, mut on: BitBoard) -> bool {
+    pub fn supported(self, mut on: BitBoard) -> bool {
         let mut hurdled_lines = 0;
         for i in (1..5).rev() {
             hurdled_lines <<= 10;
