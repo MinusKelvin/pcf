@@ -9,7 +9,13 @@ pub use solve::*;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum Piece {
-    S, Z, J, L, T, O, I
+    S,
+    Z,
+    J,
+    L,
+    T,
+    O,
+    I,
 }
 
 impl std::fmt::Display for Piece {
@@ -25,7 +31,13 @@ impl From<usize> for Piece {
 }
 
 pub const PIECES: [Piece; 7] = [
-    Piece::S, Piece::Z, Piece::J, Piece::L, Piece::T, Piece::O, Piece::I
+    Piece::S,
+    Piece::Z,
+    Piece::J,
+    Piece::L,
+    Piece::T,
+    Piece::O,
+    Piece::I,
 ];
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
@@ -69,7 +81,7 @@ impl std::fmt::Display for PieceSet {
 }
 
 impl std::iter::FromIterator<Piece> for PieceSet {
-    fn from_iter<T: IntoIterator<Item=Piece>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = Piece>>(iter: T) -> Self {
         let mut this = PieceSet::default();
         for piece in iter {
             this = this.with(piece)
@@ -84,7 +96,7 @@ pub struct BitBoard(pub u64);
 impl BitBoard {
     #[inline]
     pub fn filled(height: usize) -> BitBoard {
-        BitBoard((1 << height*10) - 1)
+        BitBoard((1 << height * 10) - 1)
     }
 
     #[inline]
@@ -104,12 +116,12 @@ impl BitBoard {
 
     #[inline]
     pub fn cell_filled(self, x: usize, y: usize) -> bool {
-        y < 6 && self.0 & 1 << x+y*10 != 0
+        y < 6 && self.0 & 1 << x + y * 10 != 0
     }
 
     #[inline]
     pub fn line_filled(self, y: usize) -> bool {
-        self.0 >> 10*y & (1<<10)-1 == (1<<10)-1
+        self.0 >> 10 * y & (1 << 10) - 1 == (1 << 10) - 1
     }
 
     #[inline]
@@ -118,7 +130,7 @@ impl BitBoard {
         let mut row = 0;
         for y in 0..6 {
             if !self.line_filled(y) {
-                b |= (self.0 >> 10*y & (1<<10)-1) << 10*row;
+                b |= (self.0 >> 10 * y & (1 << 10) - 1) << 10 * row;
                 row += 1;
             }
         }
@@ -130,7 +142,7 @@ impl BitBoard {
         // start with completely filled row
         let mut collapsed = (1 << 10) - 1;
         for i in 0..height {
-            collapsed &= self.0 >> i*10;
+            collapsed &= self.0 >> i * 10;
         }
         // collapsed has a 0 wherever there's an empty cell in rows 0..height
         // so to find the x of first one, we need only count the number of 1s before it
@@ -141,7 +153,7 @@ impl BitBoard {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Placement {
     pub kind: PieceState,
-    pub x: u8
+    pub x: u8,
 }
 
 impl Placement {
@@ -167,10 +179,10 @@ impl Placement {
             // copy lines below filled lines into filled lines
             for y in 1..6 {
                 if on.line_filled(y) {
-                    on.0 &= (on.0 << 10) | !((1<<10) - 1 << 10*y);
+                    on.0 &= (on.0 << 10) | !((1 << 10) - 1 << 10 * y);
                 }
             }
-            self.kind.y()==0 || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
+            self.kind.y() == 0 || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
         }
     }
 
@@ -183,21 +195,28 @@ impl Placement {
     pub fn srs_piece(self, board: BitBoard) -> ArrayVec<[SrsPiece; 4]> {
         let mut below_lines = 0;
         for i in 0..self.kind.y() {
-            if board.0 >> 10*i & (1<<10)-1 == (1<<10)-1 {
+            if board.0 >> 10 * i & (1 << 10) - 1 == (1 << 10) - 1 {
                 below_lines += 1;
             }
         }
-        self.kind.piece_srs().iter().map(|&p| SrsPiece {
-            x: self.x as i32 + p.x,
-            y: p.y - below_lines,
-            ..p
-        }).collect()
+        self.kind
+            .piece_srs()
+            .iter()
+            .map(|&p| SrsPiece {
+                x: self.x as i32 + p.x,
+                y: p.y - below_lines,
+                ..p
+            })
+            .collect()
     }
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum Rotation {
-    North, East, South, West
+    North,
+    East,
+    South,
+    West,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -205,7 +224,7 @@ pub struct SrsPiece {
     pub piece: Piece,
     pub rotation: Rotation,
     pub x: i32,
-    pub y: i32
+    pub y: i32,
 }
 
 pub use data::PieceState;

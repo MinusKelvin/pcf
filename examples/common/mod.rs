@@ -1,9 +1,13 @@
-use pcf::{ BitBoard, Placement, Piece };
-use fumen::{ Fumen, Page, CellColor };
+use fumen::{CellColor, Fumen, Page};
+use pcf::{BitBoard, Piece, Placement};
 
 pub fn draw_placements(page: &mut Page, placements: &[Placement]) {
     for placement in placements {
-        blit(page, placement.board(), pcf_piece_to_fumen_piece(placement.kind.piece()).into());
+        blit(
+            page,
+            placement.board(),
+            pcf_piece_to_fumen_piece(placement.kind.piece()).into(),
+        );
     }
 }
 
@@ -16,7 +20,8 @@ pub fn add_placement_pages(fumen: &mut Fumen, mut on: BitBoard, placements: &[Pl
         page.piece = Some(fumen::Piece {
             kind: pcf_piece_to_fumen_piece(srs.piece),
             rotation: pcf_rot_to_fumen_rot(srs.rotation),
-            x: srs.x as u32, y: srs.y as u32
+            x: srs.x as u32,
+            y: srs.y as u32,
         });
         fumen.pages.push(page);
         on = on.combine(placement.board());
@@ -27,7 +32,8 @@ pub fn add_placement_pages(fumen: &mut Fumen, mut on: BitBoard, placements: &[Pl
         page.piece = Some(fumen::Piece {
             kind: pcf_piece_to_fumen_piece(srs.piece),
             rotation: pcf_rot_to_fumen_rot(srs.rotation),
-            x: srs.x as u32, y: srs.y as u32
+            x: srs.x as u32,
+            y: srs.y as u32,
         });
         on = on.combine(placement.board());
     }

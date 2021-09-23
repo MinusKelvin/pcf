@@ -1,9 +1,12 @@
 use crate::*;
-use std::sync::atomic::{ AtomicBool, Ordering };
+use std::sync::atomic::{AtomicBool, Ordering};
 
 pub fn find_combinations(
-    piece_set: PieceSet, board: BitBoard, abort: &AtomicBool, height: usize,
-    mut combo_consumer: impl FnMut(&[Placement])
+    piece_set: PieceSet,
+    board: BitBoard,
+    abort: &AtomicBool,
+    height: usize,
+    mut combo_consumer: impl FnMut(&[Placement]),
 ) {
     find_combos_st(
         &mut vec![],
@@ -12,20 +15,30 @@ pub fn find_combinations(
         piece_set,
         abort,
         height,
-        &mut combo_consumer
+        &mut combo_consumer,
     );
 }
 
 pub fn find_combinations_mt(
-    piece_set: PieceSet, board: BitBoard, abort: &AtomicBool, height: usize,
-    combo_consumer: impl FnMut(&[Placement]) + Clone + Send
+    piece_set: PieceSet,
+    board: BitBoard,
+    abort: &AtomicBool,
+    height: usize,
+    combo_consumer: impl FnMut(&[Placement]) + Clone + Send,
 ) {
-    rayon::scope(|scope|
+    rayon::scope(|scope| {
         find_combos_mt(
-            scope, vec![], board, BitBoard::filled(height), piece_set,
-            abort, height, 0, combo_consumer
+            scope,
+            vec![],
+            board,
+            BitBoard::filled(height),
+            piece_set,
+            abort,
+            height,
+            0,
+            combo_consumer,
         )
-    );
+    });
 }
 
 fn find_combos_st(
@@ -35,23 +48,32 @@ fn find_combos_st(
     piece_set: PieceSet,
     abort: &AtomicBool,
     height: usize,
-    combo_consumer: &mut impl FnMut(&[Placement])
+    combo_consumer: &mut impl FnMut(&[Placement]),
 ) {
     find_combos(
-        board, inverse_placed, piece_set, abort, height,
+        board,
+        inverse_placed,
+        piece_set,
+        abort,
+        height,
         |placement, board, inverse_placed, piece_set| {
             placements.push(placement);
             if has_cyclic_dependency(inverse_placed, placements, height) {
-                
             } else if board == BitBoard::filled(height) {
                 combo_consumer(placements);
             } else {
                 find_combos_st(
-                    placements, board, inverse_placed, piece_set, abort, height, combo_consumer
+                    placements,
+                    board,
+                    inverse_placed,
+                    piece_set,
+                    abort,
+                    height,
+                    combo_consumer,
                 )
             };
             placements.pop();
-        }
+        },
     )
 }
 
@@ -62,31 +84,51 @@ fn find_combos_mt<'s>(
     inverse_placed: BitBoard,
     piece_set: PieceSet,
     abort: &'s AtomicBool,
-    height: usize, recursions: usize,
-    mut combo_consumer: impl FnMut(&[Placement]) + Clone + Send + 's
+    height: usize,
+    recursions: usize,
+    mut combo_consumer: impl FnMut(&[Placement]) + Clone + Send + 's,
 ) {
     if recursions >= 3 {
         find_combos_st(
-            &mut placements, board, inverse_placed, piece_set, abort, height, &mut combo_consumer
+            &mut placements,
+            board,
+            inverse_placed,
+            piece_set,
+            abort,
+            height,
+            &mut combo_consumer,
         );
     } else {
         find_combos(
-            board, inverse_placed, piece_set, abort, height,
+            board,
+            inverse_placed,
+            piece_set,
+            abort,
+            height,
             |placement, board, inverse_placed, piece_set| {
                 placements.push(placement);
                 if has_cyclic_dependency(inverse_placed, &placements, height) {
-
                 } else if board == BitBoard::filled(height) {
                     combo_consumer(&placements);
                 } else {
                     let p = placements.clone();
                     let c = combo_consumer.clone();
-                    scope.spawn(move |scope| find_combos_mt(
-                        scope, p, board, inverse_placed, piece_set, abort, height, recursions+1, c
-                    ));
+                    scope.spawn(move |scope| {
+                        find_combos_mt(
+                            scope,
+                            p,
+                            board,
+                            inverse_placed,
+                            piece_set,
+                            abort,
+                            height,
+                            recursions + 1,
+                            c,
+                        )
+                    });
                 }
                 placements.pop();
-            }
+            },
         );
     }
 }
@@ -98,7 +140,7 @@ fn find_combos(
     piece_set: PieceSet,
     abort: &AtomicBool,
     height: usize,
-    mut next: impl FnMut(Placement, BitBoard, BitBoard, PieceSet)
+    mut next: impl FnMut(Placement, BitBoard, BitBoard, PieceSet),
 ) {
     let x = board.leftmost_empty_column(height);
     let mut y = 0;
@@ -113,17 +155,19 @@ fn find_combos(
     for &piece in &PIECES {
         if !piece_set.contains(piece) {
             // this piece can't be used again
-            continue
+            continue;
         }
-        for &piece_state in crate::data::PIECE_STATES_BY_HEIGHT_KIND_CELLY[height-1][piece as usize][y] {
+        for &piece_state in
+            crate::data::PIECE_STATES_BY_HEIGHT_KIND_CELLY[height - 1][piece as usize][y]
+        {
             if x + piece_state.width() as usize > 10 {
                 // piece doesn't fit. array is sorted by width, so all future states fail this too.
-                break
+                break;
             }
-            
+
             let placement = Placement {
                 kind: piece_state,
-                x: x as u8
+                x: x as u8,
             };
             let piece_board = placement.board();
 
@@ -140,18 +184,24 @@ fn find_combos(
             let new_board = piece_board.combine(board);
             let new_inverse_placed = inverse_placed.remove(piece_board);
 
-            next(placement, new_board, new_inverse_placed, piece_set.without(piece));
+            next(
+                placement,
+                new_board,
+                new_inverse_placed,
+                piece_set.without(piece),
+            );
         }
     }
 }
-
 
 /// Check that no cyclic placement dependency exists. e.g. An S hurdles row 1, and an O hurdles
 /// row 2. To place the O, the S must be used to clear a line first. To place the S, the O must
 /// be used to clear a line first. Obviously, these dependencies cannot be satisfied.
 #[inline(always)]
 fn has_cyclic_dependency(
-    inverse_placed: BitBoard, placements: &[Placement], height: usize
+    inverse_placed: BitBoard,
+    placements: &[Placement],
+    height: usize,
 ) -> bool {
     // Initially filled spots of the field obviously provide support, but the empty parts
     // that haven't been filled by anything? Yes actually, since we could choose a set of
@@ -166,7 +216,7 @@ fn has_cyclic_dependency(
 
             if supports.overlaps(piece_board) {
                 // this basically checks if we've already placed p on the board
-                continue
+                continue;
             }
 
             if p.supported(supports) {

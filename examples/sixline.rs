@@ -1,5 +1,5 @@
-use fumen::{ Fumen, Page };
-use pcf::{ BitBoard, Piece, placeability };
+use fumen::Fumen;
+use pcf::{placeability, BitBoard, Piece};
 use rand::prelude::*;
 use std::sync::atomic::AtomicBool;
 
@@ -7,8 +7,20 @@ mod common;
 
 fn main() {
     let mut queue = [
-        Piece::I, Piece::T, Piece::O, Piece::L, Piece::J, Piece::S, Piece::Z,
-        Piece::I, Piece::T, Piece::O, Piece::L, Piece::J, Piece::S, Piece::Z
+        Piece::I,
+        Piece::T,
+        Piece::O,
+        Piece::L,
+        Piece::J,
+        Piece::S,
+        Piece::Z,
+        Piece::I,
+        Piece::T,
+        Piece::O,
+        Piece::L,
+        Piece::J,
+        Piece::S,
+        Piece::Z,
     ];
     queue[..7].shuffle(&mut thread_rng());
     queue[7..].shuffle(&mut thread_rng());
@@ -22,8 +34,13 @@ fn main() {
     let t = std::time::Instant::now();
     let b = BitBoard(0b1000000000_1000000000_1000000000_1000000000_1100000000_1100000000);
     pcf::solve_pc_mt(
-        &queue, b, true, true, &AtomicBool::new(false), placeability::hard_drop_only,
-        move |soln| common::add_placement_pages(&mut fumen, b, soln)
+        &queue,
+        b,
+        true,
+        true,
+        &AtomicBool::new(false),
+        placeability::hard_drop_only,
+        move |soln| common::add_placement_pages(&mut fumen, b, soln),
     );
     println!("Done in {:?}.", t.elapsed());
 
@@ -34,8 +51,16 @@ fn main() {
     }
 
     use std::io::Write;
-    writeln!(std::fs::File::create("solutions.txt").unwrap(), "{}", fumen.encode()).unwrap();
-    println!("{} solutions have been saved to solutions.txt", fumen.pages.len() / 10);
+    writeln!(
+        std::fs::File::create("solutions.txt").unwrap(),
+        "{}",
+        fumen.encode()
+    )
+    .unwrap();
+    println!(
+        "{} solutions have been saved to solutions.txt",
+        fumen.pages.len() / 10
+    );
     println!("(these fumens can be so large that you can't view it by clicking a URL)");
 }
 
