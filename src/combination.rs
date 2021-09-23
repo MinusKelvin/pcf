@@ -115,10 +115,10 @@ fn find_combos(
             // this piece can't be used again
             continue
         }
-        for &piece_state in crate::data::PIECE_STATES_FOR_HEIGHT_AND_PIECE[height-1][piece as usize] {
+        for &piece_state in crate::data::PIECE_STATES_BY_HEIGHT_KIND_CELLY[height-1][piece as usize][y] {
             if x + piece_state.width() as usize > 10 {
-                // piece doesn't fit
-                continue
+                // piece doesn't fit. array is sorted by width, so all future states fail this too.
+                break
             }
             
             let placement = Placement {
@@ -127,10 +127,6 @@ fn find_combos(
             };
             let piece_board = placement.board();
 
-            if !piece_board.cell_filled(x, y) {
-                // piece doesn't fill the cell we're trying to fill
-                continue;
-            }
             if piece_board.overlaps(board) {
                 // can't place piece here
                 continue;

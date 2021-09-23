@@ -94,6 +94,8 @@ fn main() -> std::io::Result<()> {
         &[("North", 0, 0), ("East", 0, 1), ("South", 1, 1), ("West", 1, 0)]
     );
 
+    states.sort_by_key(|v| v.width);
+
     let mut piece_state_enum =
         "#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)] pub enum PieceState {".to_owned();
     let mut piece_bits = format!("const PIECE_BITS: &'static [u64; {}] = &[", states.len());
@@ -109,11 +111,13 @@ fn main() -> std::io::Result<()> {
         "const PIECE_SRS: &'static [&'static [SrsPiece]; {}] = &[", states.len()
     );
 
-    let mut heights_and_piece: [[String; 7]; 6] = {
+    let mut height_piece_cell_array: [[[String; 6]; 7]; 6] = {
         let mut a1 = ArrayVec::new();
         a1.extend(std::iter::repeat(String::new()));
+        let mut a2 = ArrayVec::new();
+        a2.extend(std::iter::repeat(a1.into_inner().unwrap()));
         let mut a = ArrayVec::new();
-        a.extend(std::iter::repeat(a1.into_inner().unwrap()));
+        a.extend(std::iter::repeat(a2.into_inner().unwrap()));
         a.into_inner().unwrap()
     };
 
@@ -140,18 +144,29 @@ fn main() -> std::io::Result<()> {
         piece_srs.push_str("],");
 
         for i in data.height as usize - 1 .. 6 {
-            let s = &mut heights_and_piece[i][piece_index(data.name.chars().next().unwrap())];
+            let mut y = 0;
+            loop {
+                if data.bitboard & 1 << 10*y != 0 {
+                    break;
+                }
+                y += 1;
+            }
+            let s = &mut height_piece_cell_array[i][piece_index(data.name.chars().next().unwrap())][y];
             s.push_str("PieceState::");
             s.push_str(&data.name);
             s.push(',');
         }
     }
 
-    writeln!(file, "pub const PIECE_STATES_FOR_HEIGHT_AND_PIECE: &'static [[&'static [PieceState]; 7]; 6] = &[")?;
-    for h in &heights_and_piece {
+    writeln!(file, "pub const PIECE_STATES_BY_HEIGHT_KIND_CELLY: &'static [[[&'static [PieceState]; 6]; 7]; 6] = &[")?;
+    for h in &height_piece_cell_array {
         writeln!(file, "[")?;
-        for v in h {
-            writeln!(file, "&[{}],", v)?;
+        for p in h {
+            writeln!(file, "[")?;
+            for v in p {
+                writeln!(file, "&[{}],", v)?;
+            }
+            writeln!(file, "],")?;
         }
         writeln!(file, "],")?;
     }
