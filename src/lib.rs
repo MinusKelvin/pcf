@@ -164,15 +164,8 @@ impl Placement {
 
     #[inline]
     pub fn supported_after_clears(self, mut on: BitBoard) -> bool {
-        let mut hurdled_lines = 0;
-        for i in (1..5).rev() {
-            hurdled_lines <<= 10;
-            if self.kind.hurdles() & 1 << i != 0 {
-                hurdled_lines |= (1 << 10) - 1;
-            }
-        }
-        // shift by 10 since the above loop skips the bottom row since it can't be hurdled
-        if BitBoard(hurdled_lines << 10).remove(on) != BitBoard(0) {
+        let hurdled_lines = HURDLE_MASKS[self.kind.hurdles() as usize];
+        if BitBoard(hurdled_lines).remove(on) != BitBoard(0) {
             // hurdled lines not filled means the hurdled placement is impossible
             false
         } else {
@@ -188,15 +181,8 @@ impl Placement {
 
     #[inline]
     pub fn supported_without_clears(self, on: BitBoard) -> bool {
-        let mut hurdled_lines = 0;
-        for i in (1..5).rev() {
-            hurdled_lines <<= 10;
-            if self.kind.hurdles() & 1 << i != 0 {
-                hurdled_lines |= (1 << 10) - 1;
-            }
-        }
-        // shift by 10 since the above loop skips the bottom row since it can't be hurdled
-        if BitBoard(hurdled_lines << 10).remove(on) != BitBoard(0) {
+        let hurdled_lines = HURDLE_MASKS[self.kind.hurdles() as usize];
+        if BitBoard(hurdled_lines).remove(on) != BitBoard(0) {
             // hurdled lines not filled means the hurdled placement is impossible
             false
         } else {
@@ -247,3 +233,22 @@ pub struct SrsPiece {
 
 pub use data::PieceState;
 include!(concat!(env!("OUT_DIR"), "/data.rs"));
+
+const HURDLE_MASKS: [u64; 64] = {
+    let mut result = [0; 64];
+    let mut hurdle_mask = 0;
+    while hurdle_mask < 64 {
+        let mut hurdled_lines = 0;
+        let mut i = 5;
+        while i >= 0 {
+            hurdled_lines <<= 10;
+            if hurdle_mask & 1 << i != 0 {
+                hurdled_lines |= (1 << 10) - 1;
+            }
+            i -= 1;
+        }
+        result[hurdle_mask] = hurdled_lines;
+        hurdle_mask += 1;
+    }
+    result
+};
