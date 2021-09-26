@@ -175,7 +175,7 @@ fn solve(
                 // can't place this placement since it's neither next nor obtainable through hold
                 continue;
             }
-            if !placement.supported(board) {
+            if !placement.supported_after_clears(board) {
                 // unsupported placement obviously can't come next
                 continue;
             }

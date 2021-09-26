@@ -163,7 +163,7 @@ impl Placement {
     }
 
     #[inline]
-    pub fn supported(self, mut on: BitBoard) -> bool {
+    pub fn supported_after_clears(self, mut on: BitBoard) -> bool {
         let mut hurdled_lines = 0;
         for i in (1..5).rev() {
             hurdled_lines <<= 10;
@@ -182,6 +182,24 @@ impl Placement {
                     on.0 &= (on.0 << 10) | !((1 << 10) - 1 << 10 * y);
                 }
             }
+            self.kind.y() == 0 || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
+        }
+    }
+
+    #[inline]
+    pub fn supported_without_clears(self, on: BitBoard) -> bool {
+        let mut hurdled_lines = 0;
+        for i in (1..5).rev() {
+            hurdled_lines <<= 10;
+            if self.kind.hurdles() & 1 << i != 0 {
+                hurdled_lines |= (1 << 10) - 1;
+            }
+        }
+        // shift by 10 since the above loop skips the bottom row since it can't be hurdled
+        if BitBoard(hurdled_lines << 10).remove(on) != BitBoard(0) {
+            // hurdled lines not filled means the hurdled placement is impossible
+            false
+        } else {
             self.kind.y() == 0 || on.overlaps(BitBoard(self.kind.below_mask().0 << self.x))
         }
     }

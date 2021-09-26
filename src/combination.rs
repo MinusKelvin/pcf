@@ -219,7 +219,7 @@ fn has_cyclic_dependency(
                 continue;
             }
 
-            if p.supported(supports) {
+            if p.supported_without_clears(supports) {
                 // supported placement
                 supports = supports.combine(piece_board);
                 continue 'place;
