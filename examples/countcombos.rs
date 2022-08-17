@@ -8,9 +8,15 @@ fn main() {
     let t = std::time::Instant::now();
 
     let mut incr = DelayedIncrement::new(&count);
-    pcf::find_combinations_mt(pieces, pcf::BitBoard(0), &Default::default(), 4, move |_| {
-        incr.inc();
-    });
+    pcf::find_combinations(
+        pieces,
+        pcf::BitBoard(0),
+        &Default::default(),
+        4,
+        move |_| {
+            incr.inc();
+        },
+    );
 
     println!(
         "Found {} combinations in {:?}",
@@ -19,7 +25,6 @@ fn main() {
     );
 }
 
-#[derive(Clone)]
 struct DelayedIncrement<'a> {
     local: u64,
     target: &'a AtomicU64,
@@ -38,5 +43,14 @@ impl DelayedIncrement<'_> {
 impl Drop for DelayedIncrement<'_> {
     fn drop(&mut self) {
         self.target.fetch_add(self.local, Ordering::Relaxed);
+    }
+}
+
+impl Clone for DelayedIncrement<'_> {
+    fn clone(&self) -> Self {
+        Self {
+            local: 0,
+            target: self.target,
+        }
     }
 }

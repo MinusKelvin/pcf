@@ -61,6 +61,7 @@ fn find_combos_st(
             if has_cyclic_dependency(inverse_placed, placements, height) {
             } else if board == BitBoard::filled(height) {
                 combo_consumer(placements);
+            } else if !vertical_parity_ok(board, piece_set, height) {
             } else {
                 find_combos_st(
                     placements,
@@ -110,6 +111,7 @@ fn find_combos_mt<'s>(
                 if has_cyclic_dependency(inverse_placed, &placements, height) {
                 } else if board == BitBoard::filled(height) {
                     combo_consumer(&placements);
+                } else if !vertical_parity_ok(board, piece_set, height) {
                 } else {
                     let p = placements.clone();
                     let c = combo_consumer.clone();
@@ -233,4 +235,44 @@ fn has_cyclic_dependency(
     // any holes in the supported field, then we know that there are some placements that
     // have a cyclic dependency and therefore this combination can't ever be placed.
     supports != BitBoard::filled(height)
+}
+
+/// Check that vertical parity can be corrected with the available pieces.
+/// There are 4 pieces that can change vertical parity: L and J in any orientation change it by
+/// 1, vertical T changes it by 1, and vertical I changes it by 2.
+#[inline(always)]
+fn vertical_parity_ok(board: BitBoard, remaining: PieceSet, height: usize) -> bool {
+    let remaining_pieces = BitBoard::filled(height).remove(board).0.count_ones() / 4;
+
+    // pieces that can be placed without changing vertical parity
+    let available_non_lj = remaining.0[Piece::S as usize] as u32
+        + remaining.0[Piece::Z as usize] as u32
+        + remaining.0[Piece::T as usize] as u32
+        + remaining.0[Piece::I as usize] as u32
+        + remaining.0[Piece::O as usize] as u32;
+
+    let even_columns = 0b0101010101_0101010101_0101010101_0101010101_0101010101_0101010101;
+    let vertical_parity = (board.0 & even_columns)
+        .count_ones()
+        .abs_diff((board.0 & !even_columns).count_ones())
+        / 2;
+
+    // remaining potential for vertical parity to be changed
+    let can_change = remaining.0[Piece::L as usize] as u32
+        + remaining.0[Piece::J as usize] as u32
+        + remaining.0[Piece::T as usize] as u32
+        + 2 * remaining.0[Piece::I as usize] as u32;
+
+    // vertical parity must change more than it could potentially be changed -> no solutions
+    if vertical_parity > can_change {
+        return false;
+    }
+
+    // number of vertical parity changes that must happen due to forced L/J pieces
+    let must_change = remaining_pieces - available_non_lj.min(remaining_pieces);
+    if can_change == must_change && (vertical_parity ^ must_change) & 1 != 0 {
+        false
+    } else {
+        true
+    }
 }
