@@ -15,6 +15,7 @@ pub fn find_combinations(
         piece_set,
         abort,
         height,
+        &|_, _, _, _, _| true,
         &mut combo_consumer,
     );
 }
@@ -36,6 +37,51 @@ pub fn find_combinations_mt(
             abort,
             height,
             0,
+            |_, _, _, _, _| true,
+            combo_consumer,
+        )
+    });
+}
+
+pub fn find_combinations_with_pruning(
+    piece_set: PieceSet,
+    board: BitBoard,
+    abort: &AtomicBool,
+    height: usize,
+    is_ok: impl Fn(&[Placement], BitBoard, BitBoard, usize, PieceSet) -> bool,
+    mut combo_consumer: impl FnMut(&[Placement]),
+) {
+    find_combos_st(
+        &mut vec![],
+        board,
+        BitBoard::filled(height),
+        piece_set,
+        abort,
+        height,
+        &is_ok,
+        &mut combo_consumer,
+    );
+}
+
+pub fn find_combinations_with_pruning_mt(
+    piece_set: PieceSet,
+    board: BitBoard,
+    abort: &AtomicBool,
+    height: usize,
+    is_ok: impl Fn(&[Placement], BitBoard, BitBoard, usize, PieceSet) -> bool + Clone + Send,
+    combo_consumer: impl FnMut(&[Placement]) + Clone + Send,
+) {
+    rayon::scope(|scope| {
+        find_combos_mt(
+            scope,
+            vec![],
+            board,
+            BitBoard::filled(height),
+            piece_set,
+            abort,
+            height,
+            0,
+            is_ok,
             combo_consumer,
         )
     });
@@ -48,6 +94,7 @@ fn find_combos_st(
     piece_set: PieceSet,
     abort: &AtomicBool,
     height: usize,
+    is_ok: &impl Fn(&[Placement], BitBoard, BitBoard, usize, PieceSet) -> bool,
     combo_consumer: &mut impl FnMut(&[Placement]),
 ) {
     find_combos(
@@ -62,6 +109,7 @@ fn find_combos_st(
             } else if board == BitBoard::filled(height) {
                 combo_consumer(placements);
             } else if !vertical_parity_ok(board, piece_set, height) {
+            } else if !is_ok(&placements, board, inverse_placed, height, piece_set) {
             } else {
                 find_combos_st(
                     placements,
@@ -70,6 +118,7 @@ fn find_combos_st(
                     piece_set,
                     abort,
                     height,
+                    is_ok,
                     combo_consumer,
                 )
             };
@@ -87,6 +136,7 @@ fn find_combos_mt<'s>(
     abort: &'s AtomicBool,
     height: usize,
     recursions: usize,
+    is_ok: impl Fn(&[Placement], BitBoard, BitBoard, usize, PieceSet) -> bool + Clone + Send + 's,
     mut combo_consumer: impl FnMut(&[Placement]) + Clone + Send + 's,
 ) {
     if recursions >= 3 {
@@ -97,6 +147,7 @@ fn find_combos_mt<'s>(
             piece_set,
             abort,
             height,
+            &is_ok,
             &mut combo_consumer,
         );
     } else {
@@ -112,9 +163,11 @@ fn find_combos_mt<'s>(
                 } else if board == BitBoard::filled(height) {
                     combo_consumer(&placements);
                 } else if !vertical_parity_ok(board, piece_set, height) {
+                } else if !is_ok(&placements, board, inverse_placed, height, piece_set) {
                 } else {
                     let p = placements.clone();
                     let c = combo_consumer.clone();
+                    let is_ok = is_ok.clone();
                     scope.spawn(move |scope| {
                         find_combos_mt(
                             scope,
@@ -125,6 +178,7 @@ fn find_combos_mt<'s>(
                             abort,
                             height,
                             recursions + 1,
+                            is_ok,
                             c,
                         )
                     });
